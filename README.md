@@ -7,6 +7,8 @@ ZTP Tool is a small GUI application to assist with setting up Fortinet FortiMana
 
 Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptool/releases) page.
 
+<p align="center"><img src="example/screenshot.png" ></p>
+
 <!-- TOC -->
 
 - [ZTP Tool](#ztp-tool)
