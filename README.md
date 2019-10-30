@@ -13,7 +13,7 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
 Extact the files from the .zip archive somewhere on your computer.
 Note: Chrome must be installed the computer.
 
-Create an user on FortiManager version 6.2.1+ with '<rpc-permit read-write'> permissions set with ADOM mode enabled. 
+Create an user on FortiManager version 6.2.1+ with '<rpc-permit read-write>' permissions set with ADOM mode enabled. 
 
 Open ztptool.exe and goto the Import ADOM page.
 
