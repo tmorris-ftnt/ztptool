@@ -57,19 +57,19 @@ def openbook(filename):
                             device_sdwanint_data[newdict['Device_name']] = {}
                             device_daddr_data[newdict['Device_name']] = {}
                         if i[0:5] == "meta_":
-                            device_meta_data[newdict['Device_name']][i[5:]] = ws.cell(row=row, column=col).value
+                            device_meta_data[newdict['Device_name']][i[5:]] = str(ws.cell(row=row, column=col).value)
                         if i[0:5] == "dint_":
-                            device_dint_data[newdict['Device_name']][i[5:]] = ws.cell(row=row, column=col).value
+                            device_dint_data[newdict['Device_name']][i[5:]] = str(ws.cell(row=row, column=col).value)
                         if i[0:9] == "sdwanint_":
                             sdwanintsettings = i[9:].split("|")
                             try:
                                 device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]]
                             except:
                                 device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]] = {}
-                            device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]][sdwanintsettings[1]] = ws.cell(row=row, column=col).value
+                            device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]][sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
 
                         if i[0:6] == "daddr_":
-                            device_daddr_data[newdict['Device_name']][i[6:]] = ws.cell(row=row, column=col).value
+                            device_daddr_data[newdict['Device_name']][i[6:]] = str(ws.cell(row=row, column=col).value)
 
 
 
@@ -93,13 +93,17 @@ def openbook(filename):
             if ws2.cell(row=row, column=1).value == None:
                 blankrow += 1
             else:
+                if ws2.cell(row=row, column=6).value == "":
+                    prefer_img_ver_value = None
+                else:
+                    prefer_img_ver_value = ws2.cell(row=row, column=6).value
                 device_platform_data[ws2.cell(row=row, column=1).value] = {
                     "platform": ws2.cell(row=row, column=2).value,
                     "platform_id": ws2.cell(row=row, column=3).value,
                     "os_ver": ws2.cell(row=row, column=7).value,
                     "version": ws2.cell(row=row, column=9).value,
                     "mr": ws2.cell(row=row, column=8).value,
-                    "prefer_img_ver": ws2.cell(row=row, column=6).value,
+                    "prefer_img_ver": prefer_img_ver_value,
                     "branch_pt": ws2.cell(row=row, column=5).value,
                     "build": ws2.cell(row=row, column=4).value
 
@@ -107,6 +111,7 @@ def openbook(filename):
     except:
         device_platform_data = "failed"
 
+    wb = None
     return AllDevicesList, device_platform_data, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
 
 
@@ -281,10 +286,32 @@ def assign_cli_template(adom,template,devicename):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
     json_assignclitemplate = json.loads(res.text)
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
+
+def unassign_cli_template(adom,template):
+    requestid = 1
+    jsondata = {
+        "method": "update",
+        "params": [
+            {
+                "url": "/pm/config/adom/" + adom + "/obj/cli/template-group",
+                "data": {
+                    "name": template,
+                    "scope member": []
+                }
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+
+    json_assignclitemplate = json.loads(res.text)
+    status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
+    return status_assignclitemplate
+
 
 
 def quickinstall(adom,devicename,vdom):
@@ -707,6 +734,7 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                     create_meta(field[5:])
 
 
+
     ### Create Model Devices
     if proceed == True:
         sendupdate(return_html)
@@ -745,7 +773,13 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                     else:
                         return_html += "Quick install device settings failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
+                    ##Unassign CLI Template
+                    unassign_cli_template(fmg_adom, devicedata['CLI_Template'])
+
+
             if qi_status == True:
+
+
                 ## Quick Install Sucessful, assign policy package etc
                 sendupdate(return_html)
                 ##map interfaces
@@ -822,7 +856,7 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
         res = session.post(fmgurl, json=jsondata, verify=False)
 
     return_html += "<br>\n<b> >> Complete! <br>\n"
-    return_html += "<br>\n <a href=\"hello.html\">Return</a> <br>\n"
+    return_html += "<br>\n <a href=\"ztptool.html\">Return</a> <br>\n"
 
     sendupdate(return_html)
 
@@ -931,7 +965,7 @@ def btn_checkadom(filename,fmghost,fmguser,fmgpasswd,fmgadom,fmgadomdesc):
         res = session.post(fmgurl, json=jsondata, verify=False)
 
     return_html += "<br>\n<b> >> Complete! <br>\n"
-    return_html += "<br>\n <a href=\"hello.html\">Return</a> <br>\n"
+    return_html += "<br>\n <a href=\"ztptool.html\">Return</a> <br>\n"
 
     sendupdate(return_html)
 
@@ -968,6 +1002,7 @@ def getsettings_adom():
             settings = json.load(json_settings)
             default_fmg = settings['fmg']
             default_user = settings['user']
+        json_settings.close()
     except:
         default_fmg = ""
         default_user = ""
@@ -1082,4 +1117,4 @@ def getsettings_devices():
 
 session = requests.session()
 
-eel.start('hello.html', size=(900, 900), disable_cache=True)             # Start (this blocks and enters loop)
+eel.start('ztptool.html', size=(900, 900), disable_cache=True)             # Start (this blocks and enters loop)

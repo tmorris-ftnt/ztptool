@@ -9,10 +9,31 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
 
 <p align="center"><img src="example/screenshot.png" ></p>
 
+## Getting Started with demo_example
+Extact the files from the .zip archive somewhere on your computer.
+Note: Chrome must be installed the computer.
+
+Create an user on FortiManager version 6.2.1+ with '<rpc-permit read-write'> permissions set with ADOM mode enabled. 
+
+Open ztptool.exe and goto the Import ADOM page.
+
+Fill in the form and select the demo_example.json file.
+
+This will setup your new ADOM with CLI Templates, SDWAN Templates, Policy Packages and Objects. 
+
+Now goto the Import Devices Page. 
+
+Fill in the form and select the demo_example.xlsx file. 
+
+This will populate your FortiManager ADOM with prebuild model devices. 
+
+
+
+
 <!-- TOC -->
 
 - [ZTP Tool](#ztp-tool)
-  - [Intro](#intro)
+  - [Getting Started with demo_exammple](#getting-started-with-demo_exammple)
 
 <!-- /TOC -->
 
