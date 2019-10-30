@@ -28,15 +28,3 @@ Fill in the form and select the demo_example.xlsx file.
 This will populate your FortiManager ADOM with prebuild model devices. 
 
 
-
-
-<!-- TOC -->
-
-- [ZTP Tool](#ztp-tool)
-  - [Getting Started with demo_exammple](#getting-started-with-demo_exammple)
-
-<!-- /TOC -->
-
-## Intro
-
-
