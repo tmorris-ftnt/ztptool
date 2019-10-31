@@ -682,25 +682,32 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
         return_html += "Load Excel workbook successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
         ##login to FMG
 
+        sendupdate(return_html)
+
         requestid = 1
 
         jsondata = {'method': 'exec',
                     'params': [{'url': '/sys/login/user', 'data': {'user': fmg_user, 'passwd': fmg_passwd}}],
                     'id': requestid}
-        res = session.post(fmgurl, json=jsondata, verify=False)
+
         try:
-            login_data = json.loads(res.text)
-            fmg_sessionid = login_data['session']
-            return_html += "FortiManager login successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
-        except:
-            return_html += "FortiManager login failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            res = session.post(fmgurl, json=jsondata, verify=False, timeout=4)
+            try:
+                login_data = json.loads(res.text)
+                fmg_sessionid = login_data['session']
+                return_html += "FortiManager login successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+            except:
+                return_html += "FortiManager login failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+        except requests.exceptions.RequestException:
+            return_html += "FortiManager connection failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
 
     if fmg_sessionid is not None:
         proceed = True
     else:
         proceed = False
 
-
+    sendupdate(return_html)
     ### validity checks
     if proceed == True:
         ## Does ADOM exist in FMG
@@ -977,8 +984,7 @@ def btn_ResimyoluClick():
     root.wm_attributes('-topmost', 1)
     filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                           filetypes=(("XLSX Files", "*.xlsx"), ("all files", "*.*")))
-
-
+    root.update() #to make dialog close on MacOS
     print(filename)
     return filename
 
@@ -989,7 +995,7 @@ def btn_getjsonfile():
     root.wm_attributes('-topmost', 1)
     filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                           filetypes=(("JSON Files", "*.json"), ("all files", "*.*")))
-
+    root.update() #to make dialog close on MacOS
     print(filename)
     return filename
 
