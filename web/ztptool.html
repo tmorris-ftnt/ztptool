@@ -29,8 +29,8 @@
   padding-top: 5rem;
 }
 .starter-template {
-  padding: 3rem 1.5rem;
-  text-align: center;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
 }
     </style>
 
@@ -54,7 +54,8 @@
         <li>FortiManager 6.2.2</li>
         <li>Future versions of FortiManager 6.2 should also work</li>
       </ul></p>
-        <p>ZTP Tool is created by Tim Morris (tmorris@foritnet.com)</p>
+        <p>ZTP Tool is created by Tim Morris.</p>
+        <p>Please report any issues at <a href="https://github.com/tmorris-ftnt/ztptool/issues">https://github.com/tmorris-ftnt/ztptool/issues</a>.</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
@@ -139,6 +140,8 @@ eel.expose(pageupdate);
 function pageupdate(msg) {
   document.getElementById("mainpage").innerHTML = msg;
 }
+
+
 
 $( document ).ready(function() {
     eel.getsettings_devices()
