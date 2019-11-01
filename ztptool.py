@@ -3,14 +3,17 @@ from tkinter import filedialog
 from tkinter import *
 from openpyxl import load_workbook
 import json, requests, ipaddress
+
 requests.packages.urllib3.disable_warnings()
 
 # Set web files folder and optionally specify which file types to check for eel.expose()
 #   *Default allowed_extensions are: ['.js', '.html', '.txt', '.htm', '.xhtml']
 eel.init('web', allowed_extensions=['.js', '.html'])
 
+
 def sendupdate(return_html):
-    eel.my_javascript_function(return_html)
+    eel.pageupdate(return_html)
+
 
 ### Start copy from draft
 
@@ -66,12 +69,11 @@ def openbook(filename):
                                 device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]]
                             except:
                                 device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]] = {}
-                            device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]][sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
+                            device_sdwanint_data[newdict['Device_name']][sdwanintsettings[0]][
+                                sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
 
                         if i[0:6] == "daddr_":
                             device_daddr_data[newdict['Device_name']][i[6:]] = str(ws.cell(row=row, column=col).value)
-
-
 
                         col += 1
 
@@ -159,8 +161,8 @@ def create_meta(newname):
         ret_meta = "Failed to create Meta Field " + newname
     return ret_meta
 
-def track_model_task(taskid):
 
+def track_model_task(taskid):
     complete = 0
     while complete == 0:
         requestid = 1
@@ -194,8 +196,7 @@ def track_model_task(taskid):
     return ret_status
 
 
-def add_model_device(adomname,devicename,sn,devicetype):
-
+def add_model_device(adomname, devicename, sn, devicetype):
     version = device_platform_data[devicetype]['version']
     os_ver = device_platform_data[devicetype]['os_ver']
     major_rev = device_platform_data[devicetype]['mr']
@@ -246,7 +247,8 @@ def add_model_device(adomname,devicename,sn,devicetype):
     last_task = str(response['result'][0]['data']['taskid'])
     return last_task
 
-def update_device(adom,devicename):
+
+def update_device(adom, devicename):
     requestid = 1
     jsondata = {
         "method": "update",
@@ -264,7 +266,8 @@ def update_device(adom,devicename):
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
 
-def assign_cli_template(adom,template,devicename):
+
+def assign_cli_template(adom, template, devicename):
     requestid = 1
     jsondata = {
         "method": "update",
@@ -290,7 +293,8 @@ def assign_cli_template(adom,template,devicename):
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
 
-def unassign_cli_template(adom,template):
+
+def unassign_cli_template(adom, template):
     requestid = 1
     jsondata = {
         "method": "update",
@@ -313,8 +317,7 @@ def unassign_cli_template(adom,template):
     return status_assignclitemplate
 
 
-
-def quickinstall(adom,devicename,vdom):
+def quickinstall(adom, devicename, vdom):
     requestid = 1
     jsondata = {
         "method": "exec",
@@ -339,6 +342,7 @@ def quickinstall(adom,devicename,vdom):
     json_quickinstall = json.loads(res.text)
     taskid_qi = json_quickinstall['result'][0]['data']['task']
     return taskid_qi
+
 
 def track_quickinstall(taskid):
     complete = 0
@@ -372,23 +376,24 @@ def track_quickinstall(taskid):
                 time.sleep(1)
     return ret_status
 
-def add_install_target(device,adomname,vdomname,pkg):
+
+def add_install_target(device, adomname, vdomname, pkg):
     requestid = 1
     jsondata = {
-      "method":"add",
-      "params":[
-        {
-          "url": "pm/pkg/adom/" + adomname + "/" + pkg + "/scope member",
-          "data": [
+        "method": "add",
+        "params": [
             {
-                "name": device,
-                "vdom": vdomname
-            },
-          ]
-        }
-      ],
-      "id": requestid,
-      "session": fmg_sessionid
+                "url": "pm/pkg/adom/" + adomname + "/" + pkg + "/scope member",
+                "data": [
+                    {
+                        "name": device,
+                        "vdom": vdomname
+                    },
+                ]
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
     print(res.text)
@@ -397,7 +402,7 @@ def add_install_target(device,adomname,vdomname,pkg):
     return status_ppkg
 
 
-def install_pkg(pkg,adomname,devicename,vdom):
+def install_pkg(pkg, adomname, devicename, vdom):
     requestid = 1
     jsondata = {
         "method": "exec",
@@ -405,15 +410,15 @@ def install_pkg(pkg,adomname,devicename,vdom):
             {
                 "url": "securityconsole/install/package",
                 "data":
-                    { "pkg": pkg,
-                      "adom": adomname,
-                      "scope": [
-                          {
-                              "name": devicename,
-                              "vdom": vdom
-                          }
-                      ]
-                    }
+                    {"pkg": pkg,
+                     "adom": adomname,
+                     "scope": [
+                         {
+                             "name": devicename,
+                             "vdom": vdom
+                         }
+                     ]
+                     }
             }
         ],
         "id": requestid,
@@ -424,7 +429,6 @@ def install_pkg(pkg,adomname,devicename,vdom):
     response = json.loads(res.text)
     last_task = str(response['result'][0]['data']['task'])
     return last_task
-
 
 
 def track_policyinstall(taskid):
@@ -459,31 +463,32 @@ def track_policyinstall(taskid):
                 time.sleep(1)
     return ret_status
 
+
 def add_policy_interface_member(adomname, newinterfacename, realinterface, devicename):
     requestid = 1
     jsondata = {
-      "method":"add",
-      "params":[
-        {
-          "url":"pm/config/adom/" + adomname + "/obj/dynamic/interface/" + newinterfacename + "/dynamic_mapping",
-          "data":
-                  {
-                      "_scope": [
-                          {
-                              "name": devicename,
-                              "vdom": "root"
-                          }
-                      ],
-                      "local-intf": [
-                          realinterface
-                      ],
-                      "intrazone-deny": 0
-                  }
+        "method": "add",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adomname + "/obj/dynamic/interface/" + newinterfacename + "/dynamic_mapping",
+                "data":
+                    {
+                        "_scope": [
+                            {
+                                "name": devicename,
+                                "vdom": "root"
+                            }
+                        ],
+                        "local-intf": [
+                            realinterface
+                        ],
+                        "intrazone-deny": 0
+                    }
 
-        }
-      ],
-      "id":requestid,
-      "session":fmg_sessionid
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_mapdint = json.loads(res.text)
@@ -491,7 +496,7 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
     return status_mapdint
 
 
-def add_sdwaninterface_mapping(adomname,devicename,interfacename,vdom):
+def add_sdwaninterface_mapping(adomname, devicename, interfacename, vdom):
     ## get settings for base SDWAN interface
     requestid = 1
 
@@ -500,14 +505,14 @@ def add_sdwaninterface_mapping(adomname,devicename,interfacename,vdom):
         "params": [
             {
                 "url": "/pm/config/adom/" + adomname + "/obj/dynamic/virtual-wan-link/members/" + interfacename,
-                }
+            }
         ],
         "id": requestid,
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_sdwanint_res = json.loads(res.text)
-    json_sdwanint= json_sdwanint_res['result'][0]['data']
+    json_sdwanint = json_sdwanint_res['result'][0]['data']
     json_sdwanint.pop('dynamic_mapping', None)
     json_sdwanint.pop('obj seq', None)
     json_sdwanint.pop('name', None)
@@ -541,7 +546,8 @@ def add_sdwaninterface_mapping(adomname,devicename,interfacename,vdom):
     status_mapsdwanint = json_mapsdwanint['result'][0]['status']['message']
     return status_mapsdwanint
 
-def assign_sdwan_template(adom,sdwantemplate,devicename,vdom):
+
+def assign_sdwan_template(adom, sdwantemplate, devicename, vdom):
     requestid = 1
     jsondata = {
         "method": "add",
@@ -549,12 +555,12 @@ def assign_sdwan_template(adom,sdwantemplate,devicename,vdom):
             {
                 "url": "/pm/wanprof/adom/" + adom + "/" + sdwantemplate + "/scope member",
                 "data": [
-                        {
-                            "name": devicename,
-                            "vdom": vdom
-                        }
-                    ]
-                }
+                    {
+                        "name": devicename,
+                        "vdom": vdom
+                    }
+                ]
+            }
 
         ],
         "id": requestid,
@@ -566,7 +572,8 @@ def assign_sdwan_template(adom,sdwantemplate,devicename,vdom):
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
 
-def add_daddr(adomname,daddrobj,newaddr,devicename,vdom):
+
+def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
     requestid = 1
     jsondata = {
         "method": "get",
@@ -613,7 +620,6 @@ def add_daddr(adomname,daddrobj,newaddr,devicename,vdom):
             newaddr.strip(" ")
             splitaddr = newaddr.split("-")
 
-
             addrsettings = [
                 {
                     "_scope": [
@@ -632,7 +638,6 @@ def add_daddr(adomname,daddrobj,newaddr,devicename,vdom):
             result_msg = "WARNING: Could not calculate IP RANGE"
 
     if submit is True:
-
         requestid = 1
         jsondata = {
             "method": "add",
@@ -652,10 +657,8 @@ def add_daddr(adomname,daddrobj,newaddr,devicename,vdom):
     return result_msg
 
 
-
-
 @eel.expose
-def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
+def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     global fmg_user
     global fmg_passwd
     global fmgurl
@@ -674,7 +677,8 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
     fmgurl = "https://" + fmghost + "/jsonrpc"
     fmg_sessionid = None
 
-    alldevices, device_platform_data, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = openbook(filename)
+    alldevices, device_platform_data, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = openbook(
+        filename)
     return_html = ""
     if alldevices == "failed" or device_platform_data == "failed":
         return_html += "Load Excel workbook failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
@@ -701,7 +705,6 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
         except requests.exceptions.RequestException:
             return_html += "FortiManager connection failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
-
     if fmg_sessionid is not None:
         proceed = True
     else:
@@ -716,18 +719,18 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                     "session": fmg_sessionid}
         res = session.post(fmgurl, json=jsondata, verify=False)
         json_result = json.loads(res.text)
-        print (json_result['result'][0]['status']['message'])
+        print(json_result['result'][0]['status']['message'])
         if json_result['result'][0]['status']['message'] != "OK":
             return_html += "FortiManager ADOM does not exist <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             proceed = False
 
         ## check for required fields in headings
-        required_headings = ["Device_name", "Device_Type", "Device_SN", "CLI_Template", "Policy_Package", "SDWAN_Template"]
+        required_headings = ["Device_name", "Device_Type", "Device_SN", "CLI_Template", "Policy_Package",
+                             "SDWAN_Template"]
         for req_heading in required_headings:
             if req_heading not in headings:
                 return_html += "Excel File does not have required heading \"" + req_heading + "\" <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                 proceed = False
-
 
     ### Check for Meta Fields and Create if they dont exist
     if proceed == True:
@@ -740,23 +743,24 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                 except:
                     create_meta(field[5:])
 
-
-
     ### Create Model Devices
     if proceed == True:
         sendupdate(return_html)
 
         for devicedata in alldevices:
             return_html += "<br>\n <b> >> Adding Device [ " + devicedata['Device_name'] + " ] </b><br>\n"
-            add_dev_status = track_model_task(add_model_device(fmg_adom, devicedata['Device_name'], devicedata['Device_SN'],
-                                        devicedata['Device_Type']))
+            add_dev_status = track_model_task(
+                add_model_device(fmg_adom, devicedata['Device_name'], devicedata['Device_SN'],
+                                 devicedata['Device_Type']))
 
             sendupdate(return_html)
 
             if add_dev_status == True:
-                return_html += "Adding model device (" + devicedata['Device_name'] + "/" + devicedata['Device_SN'] + ") successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                return_html += "Adding model device (" + devicedata['Device_name'] + "/" + devicedata[
+                    'Device_SN'] + ") successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
             else:
-                return_html += "Adding model device (" + devicedata['Device_name'] + "/" + devicedata['Device_SN'] + ") failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                return_html += "Adding model device (" + devicedata['Device_name'] + "/" + devicedata[
+                    'Device_SN'] + ") failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
             if add_dev_status == True:
                 ## Add meta data to device
@@ -765,16 +769,19 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                 ## Assign CLI Template
                 status_clitemp = assign_cli_template(fmg_adom, devicedata['CLI_Template'], devicedata['Device_name'])
                 if status_clitemp == "OK":
-                    return_html += "Assign CLI template Group \"" + devicedata['CLI_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    return_html += "Assign CLI template Group \"" + devicedata[
+                        'CLI_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                 elif status_clitemp == "Object does not exist":
-                    return_html += "Assign CLI template Group \"" + devicedata['CLI_Template'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                    return_html += "Assign CLI template Group \"" + devicedata[
+                        'CLI_Template'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                     return_html += "CLI Template not found <br>\n"
                 else:
-                    return_html += "Assign CLI template Group \"" + devicedata['CLI_Template'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                    return_html += "Assign CLI template Group \"" + devicedata[
+                        'CLI_Template'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 if status_clitemp == "OK":
                     ##Install Device Settings
-                    qi_status = track_quickinstall(quickinstall(fmg_adom,devicedata['Device_name'],'root'))
+                    qi_status = track_quickinstall(quickinstall(fmg_adom, devicedata['Device_name'], 'root'))
                     if qi_status:
                         return_html += "Quick install device settings successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                     else:
@@ -783,9 +790,7 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                     ##Unassign CLI Template
                     unassign_cli_template(fmg_adom, devicedata['CLI_Template'])
 
-
             if qi_status == True:
-
 
                 ## Quick Install Sucessful, assign policy package etc
                 sendupdate(return_html)
@@ -805,15 +810,13 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
                 ### MAP DYNAMIC ADDRESS OJBECTS
 
                 for key in device_daddr_data[devicedata['Device_name']]:
-                    status_mapdaddr = add_daddr(fmg_adom,key,device_daddr_data[devicedata['Device_name']][key],devicedata['Device_name'],'root')
+                    status_mapdaddr = add_daddr(fmg_adom, key, device_daddr_data[devicedata['Device_name']][key],
+                                                devicedata['Device_name'], 'root')
                     if status_mapdaddr == "OK":
                         return_html += "Add dynamic map for address \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                     else:
                         return_html += "Add dynamic map for address \"" + key + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                         return_html += status_mapdaddr + "<br>\n"
-
-
-
 
                 ### MAP SDWAN Interfaces
 
@@ -826,35 +829,40 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
 
                 ## Assign SDWAN Template
 
-                status_assignsdwantemplate = assign_sdwan_template(fmg_adom, devicedata['SDWAN_Template'], devicedata['Device_name'], 'root')
+                status_assignsdwantemplate = assign_sdwan_template(fmg_adom, devicedata['SDWAN_Template'],
+                                                                   devicedata['Device_name'], 'root')
                 if status_assignsdwantemplate == "OK":
-                    return_html += "Assign SDWAN template \"" + devicedata['SDWAN_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    return_html += "Assign SDWAN template \"" + devicedata[
+                        'SDWAN_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                 else:
-                    return_html += "Assign SDWAN template \"" + devicedata['SDWAN_Template'] + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
-
-
-
+                    return_html += "Assign SDWAN template \"" + devicedata[
+                        'SDWAN_Template'] + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 ## Add install Target
-                status_add_inst_trgt = add_install_target(devicedata['Device_name'], fmg_adom, "root", devicedata['Policy_Package'])
+                status_add_inst_trgt = add_install_target(devicedata['Device_name'], fmg_adom, "root",
+                                                          devicedata['Policy_Package'])
                 if status_add_inst_trgt == "OK":
-                    return_html += "Assign policy package \"" + devicedata['Policy_Package'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    return_html += "Assign policy package \"" + devicedata[
+                        'Policy_Package'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                 else:
-                    return_html += "Assign policy package \"" + devicedata['Policy_Package'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                    return_html += "Assign policy package \"" + devicedata[
+                        'Policy_Package'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 if status_add_inst_trgt == "OK":
                     ## install package
-                    pkg_status = track_policyinstall(install_pkg(devicedata['Policy_Package'], fmg_adom, devicedata['Device_name'], 'root'))
+                    pkg_status = track_policyinstall(
+                        install_pkg(devicedata['Policy_Package'], fmg_adom, devicedata['Device_name'], 'root'))
                     if pkg_status == True:
-                        return_html += "Install policy package \"" + devicedata['Policy_Package'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        return_html += "Install policy package \"" + devicedata[
+                            'Policy_Package'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                     else:
-                        return_html += "Install policy package \"" + devicedata['Policy_Package'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                        return_html += "Install policy package \"" + devicedata[
+                            'Policy_Package'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                     if pkg_status == True:
                         pass
 
             sendupdate(return_html)
-
 
     ### LOGOUT OF FMG
     if fmg_sessionid is not None:
@@ -867,10 +875,11 @@ def btn_checkxlsx(filename,fmghost,fmguser,fmgpasswd,fmgadom):
 
     sendupdate(return_html)
 
+
 ### End copy from draft
 
 @eel.expose
-def btn_checkadom(filename,fmghost,fmguser,fmgpasswd,fmgadom,fmgadomdesc):
+def btn_checkadom(filename, fmghost, fmguser, fmgpasswd, fmgadom, fmgadomdesc):
     global fmg_user
     global fmg_passwd
     global fmgurl
@@ -972,21 +981,22 @@ def btn_checkadom(filename,fmghost,fmguser,fmgpasswd,fmgadom,fmgadomdesc):
         res = session.post(fmgurl, json=jsondata, verify=False)
 
     return_html += "<br>\n<b> >> Complete! <br>\n"
-    return_html += "<br>\n <a href=\"ztptool.html\">Return</a> <br>\n"
+    return_html += "<br>\n <a href=\"ztptool.html\">Return</a> <br><br><br><br>&nbsp;\n"
 
     sendupdate(return_html)
 
 
 @eel.expose
-def btn_ResimyoluClick():
+def btn_getxlsxfile():
     root = Tk()
     root.withdraw()
     root.wm_attributes('-topmost', 1)
     filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                           filetypes=(("XLSX Files", "*.xlsx"), ("all files", "*.*")))
-    root.update() #to make dialog close on MacOS
+    root.update()  # to make dialog close on MacOS
     print(filename)
     return filename
+
 
 @eel.expose
 def btn_getjsonfile():
@@ -995,10 +1005,9 @@ def btn_getjsonfile():
     root.wm_attributes('-topmost', 1)
     filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                           filetypes=(("JSON Files", "*.json"), ("all files", "*.*")))
-    root.update() #to make dialog close on MacOS
+    root.update()  # to make dialog close on MacOS
     print(filename)
     return filename
-
 
 
 @eel.expose
@@ -1060,7 +1069,8 @@ def getsettings_adom():
     </div>
           ''' % (default_fmg, default_user)
 
-    eel.my_javascript_function(return_html)
+    eel.pageupdate(return_html)
+
 
 @eel.expose
 def getsettings_devices():
@@ -1117,10 +1127,9 @@ def getsettings_devices():
     </div>
           ''' % (default_fmg, default_user)
 
-    eel.my_javascript_function(return_html)
-
+    eel.pageupdate(return_html)
 
 
 session = requests.session()
 
-eel.start('ztptool.html', size=(900, 900), disable_cache=True)             # Start (this blocks and enters loop)
+eel.start('ztptool.html', size=(900, 900), disable_cache=True)  # Start (this blocks and enters loop)
