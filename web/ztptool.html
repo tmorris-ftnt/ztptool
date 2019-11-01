@@ -102,7 +102,7 @@
 <script>
 var dosya_path = "/";
 async function getFolder() {
-var dosya_path = await eel.btn_ResimyoluClick()();
+var dosya_path = await eel.btn_getxlsxfile()();
 	if (dosya_path) {
 		console.log(dosya_path);
         document.getElementById("filepath").innerHTML = dosya_path;
@@ -135,16 +135,14 @@ function processadom(fp) {
 }
 
 
-eel.expose(my_javascript_function);
-function my_javascript_function(msg) {
+eel.expose(pageupdate);
+function pageupdate(msg) {
   document.getElementById("mainpage").innerHTML = msg;
 }
 
-
-    $( document ).ready(function() {
-        eel.getsettings_devices()
-    });
-
+$( document ).ready(function() {
+    eel.getsettings_devices()
+});
 
 </script>
 
