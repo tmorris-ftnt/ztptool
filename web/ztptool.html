@@ -48,7 +48,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>ZTP Tool v1.0.7-alpha</p>
+        <p>ZTP Tool v1.0.8-alpha</p>
         <p>Supports:<ul>
         <li>FortiManager 6.2.1</li>
         <li>FortiManager 6.2.2</li>
@@ -79,6 +79,9 @@
       </li>
             <li class="nav-item active">
         <a class="nav-link" href="#" onclick="eel.getsettings_adom()">Import ADOM<span class="sr-only">(current)</span></a>
+      </li>
+            <li class="nav-item active">
+        <a class="nav-link" href="#" onclick="eel.getsettings_exportadom()">Export ADOM<span class="sr-only">(current)</span></a>
       </li>
 
     </ul>
@@ -135,13 +138,19 @@ function processadom(fp) {
   }
 }
 
+function processexportadom() {
+    eel.btn_checkexportadom(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgpassword').value,document.getElementById('fmgadom').value)
+}
 
 eel.expose(pageupdate);
 function pageupdate(msg) {
   document.getElementById("mainpage").innerHTML = msg;
 }
 
-
+eel.expose(saveupdate);
+function saveupdate(msg) {
+  document.getElementById("filepath").innerHTML = msg;
+}
 
 $( document ).ready(function() {
     eel.getsettings_devices()
