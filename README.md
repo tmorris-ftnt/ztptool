@@ -214,6 +214,7 @@ The following settings will be exported using this function
 * Application Groups
 * Services
 * Service Groups
+* Recurring Schedules
 * Policy Packages
   * IPv4 Policies
 
