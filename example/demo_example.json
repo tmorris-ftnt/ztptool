@@ -1,0 +1,3468 @@
+{
+    "settings": [
+        {
+            "data": [
+                {
+                    "desc": "$(adom_desc)",
+                    "flags": 2304,
+                    "log_db_retention_hours": 1440,
+                    "log_disk_quota": 0,
+                    "log_disk_quota_alert_thres": 90,
+                    "log_disk_quota_split_ratio": 70,
+                    "log_file_retention_hours": 8760,
+                    "logview_customize": "",
+                    "mig_mr": 0,
+                    "mig_os_ver": 0,
+                    "mode": 1,
+                    "mr": 2,
+                    "name": "$(adom_name)",
+                    "obj_customize": "[ \"shaping\", \"app_isc\", \"dnsprof\", \"wafprof\", \"appsignature\", \"app_grp\" ]",
+                    "os_ver": 6,
+                    "restricted_prds": 1,
+                    "state": 1,
+                    "tab_status": "[ \"dashboard\", \"interface\", \"portpair\", \"cfgvdom\", \"glbresourcetbl\", \"dhcpsvr_all\", \"modem\", \"snifferpolicy\", \"ha\", \"snmp\", \"dns\", \"dnsdb\", \"dnsserver\", \"webproxyexpl\", \"mngintf\", \"adminsettings\", \"administrator\", \"adminprof\", \"localhostid\", \"vpncacert\", \"replacemsg\", \"replacemsggrp\", \"fortiguard\", \"csf\", \"automation_stitch\", \"logsettings\", \"alertemailsett\", \"threatweight\", \"nat64prefix\", \"fortisandbox\", \"staticroute_all\", \"policyroute\", \"gatewaydetection\", \"ospf\", \"rip\", \"bgp\", \"mcroute\", \"wanoptsetting\", \"wanopturlmatch\", \"forticlientprof\", \"webfltroverride\", \"phase1_all\", \"phase2_all\", \"manualkey_all\", \"concentrator\", \"wifiradio\", \"querydhcp\", \"queryvpn\", \"queryssvpn\", \"queryuser\", \"querytrafficshapper\", \"queryfortitoken\", \"querydlp\", \"querywificlient\", \"queryrogueap\", \"querylogging\", \"queryrouting\", \"detectdevid\", \"clionlyid\" ]"
+                }
+            ],
+            "method": "add",
+            "url": "/dvmdb/adom/"
+        },
+        {
+            "data": [
+                {
+                    "description": "Used to provision FGT-VM.  Documentation on using CLI templates can be found at:  https://docs.fortinet.com/document/fortimanager/6.2.0/new-features/623532/zero-touch-provisioning-cli-template-with-variables",
+                    "name": "FGT_Provision",
+                    "script": "##Hostname\nconfig system global\n    set admintimeout 60\n    set hostname FGT-Branch$(base_value)\n    set timezone 08\nend\n##Admin PW\nconfig sys admin\n     edit admin\n     set password fortinet\nend\n##Interface config\nconfig system interface\n    edit \"port1\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip $(mgmt_ip) 255.255.255.0\n        set allowaccess ping https ssh http fgfm\n        set type physical\n    next\n    edit \"port2\"\n        set vdom \"root\"\n        set type physical\n        set ip 10.1.$(base_value).1 255.255.255.0\n        set allowaccess ping https ssh http\n        set alias \"LAN\"\n        set device-identification enable\n    next\n    edit \"port3\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip 11.1.1.$(base_value) 255.255.255.255\n        set allowaccess ping https ssh\n        set alias \"WAN1\"\n        set role wan\n    next\n    edit \"port4\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip 12.1.1.$(base_value) 255.255.255.255\n        set allowaccess ping https ssh\n        set alias \"WAN2\"\n        set role wan\n    next        \n    edit \"port5\"\n        set vdom \"root\"\n        set type physical\n        set ip 10.88.1.1 255.255.255.0\n        set allowaccess ping\n        set alias \"Guest\"\n    next\n    edit \"port6\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port7\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port8\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port9\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port10\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"HUB1-VPN1\"\n        set vdom \"root\"\n        set ip 10.10.10.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.10.253 255.255.255.0\n        set interface \"port3\"\n    next\n    edit \"HUB1-VPN2\"\n        set vdom \"root\"\n        set ip 10.10.11.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.11.253 255.255.255.0\n        set interface \"port4\"\n    next\n    edit \"HUB2-VPN1\"\n        set vdom \"root\"\n        set ip 10.10.12.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.12.253 255.255.255.0\n        set interface \"port3\"\n    next\n    edit \"HUB2-VPN2\"\n        set vdom \"root\"\n        set ip 10.10.13.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.13.253 255.255.255.0\n        set interface \"port4\"\n    next\nend\n##DHCP\nconfig system dhcp server\n    edit 0\n        set ntp-service local\n        set default-gateway 10.1.$(base_value).1\n        set netmask 255.255.255.0\n        set interface \"port2\"\n        config ip-range\n            edit 1\n                set start-ip 10.1.$(base_value).100\n                set end-ip 10.1.$(base_value).200\n            next\n        end\n    next\n    edit 0\n        set dns-service default\n        set default-gateway 10.88.1.1\n        set netmask 255.255.255.0\n        set interface \"port5\"\n        config ip-range\n            edit 1\n                set start-ip 10.88.1.100\n                set end-ip 10.88.1.200\n            next\n        end\n        set timezone-option default\n    next\nend\n##VPN Config\nconfig vpn ipsec phase1-interface\n    edit \"HUB1-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub1-vpn1\"\n        set auto-discovery-receiver enable\n        set remote-gw 13.1.1.1\n        set psksecret ENC fD3IVwzwTLkGddNB37c5qthJePTjYUJAOik3miZ4/VMOHW5rjLlVj/eFQkORmcTgSvQjPaZvr9GJAxqD4hjb1o+rx5whRMIaSbnVQ9fBCi5UiavlAMpUJjnQTro7pzvIN/q/Zov+xXvPvw5vyz4WKVkg/0/T/eC87km59B77JElfCjBHTqlI3CfDbJursGNVcO774Q==\n    next\n    edit \"HUB1-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub1-vpn2\"\n        set auto-discovery-receiver enable\n        set remote-gw 13.1.1.1\n        set psksecret ENC N6mwROzCARKdKwxLzNt3M4Y6SRG/DQAKDhxl9O09wW8qO9m51jcI0yttiLXdz6GQ8uDM8NBqx5ftwWPRdaB+0xLylBu5xNwK9Ub2ecULHovYEmtXVKmocqGteT5jExlMx+RIb4UYNa1j+UIgj/aCvLBq0UjAYSQ+8BmUNjBodQiWOj1dNGvNwmQg+QgpTE7FafIrtg==\n    next\n    edit \"HUB2-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub2-vpn1\"\n        set auto-discovery-receiver enable\n        set remote-gw 14.1.1.1\n        set psksecret ENC 0TzDLBlTZM/0mrOfi6fAjsOuPQCrtPQMXnraw8GJWA9fKLo1kb0kZbJszmRXsmLfzcmN+QsoxW3j+SCOllrYNYxC2VIxfuZJBDaFayOdlQddvt9hYspig+M0uAgkzE+3jYgSHZDHB4hBC/kZnnbi4Je5r4RP+1Gv6kxEPKw3BAyGDoxEOguVRNTuDcPuv0fcRuEG7Q==\n    next\n    edit \"HUB2-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub2-vpn2\"\n        set auto-discovery-receiver enable\n        set remote-gw 14.1.1.1\n        set psksecret ENC VGLFppeWRhTyQ0kpG9zM8ppNSaTGTmK9FVHs3yZxQJJWTcgNTwF7EspOvmcVtX4DY3D89vYj6icZ65n1+ispP6N/bPwLggXu3KWTAOfCKFjpmvdQAWv8aY/VNuZxVV42VrmeVEQkCBHQYYcNORg/lL7Co+IKXkXD/Pgdaepz5f0SAvcamW9C02VwvivQUrv3TMzqVw==\n    next\n    edit \"Cloud-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set mode-cfg enable\n        set proposal aes128-sha1\n        set localid \"cloud-vpn1\"\n        set remote-gw 15.1.1.1\n        set psksecret ENC aS9uggKJcvxdIoD1gpsovMa6aTCesyF0VezpRCOQE6jVv0BJr4ynLHc81vr3vAC9R6HgB0Eo7TmGyNfFZ3JaNEuq8XgIYFJQKlHyN7bob1c31fN4NB8WoHsu989xbKhO57IuZILuxUILlYlbGEe4jGp8LrBlNNMtGE4Xx3zOwL15IbQZwoq/NZj0KE0vA33sBtiLBA==\n    next\n    edit \"Cloud-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set mode-cfg enable\n        set proposal aes128-sha1\n        set localid \"cloud-vpn2\"\n        set remote-gw 15.1.1.1\n        set psksecret ENC 4RzsOHxY7yrwfrQsozclNj85Ov3W7ATsgBKCGaykoqatKnksyFZYGiIdeU2UucxIKXaJPIQetLlvurXXaTauTvXMVCczj6nKN2DhyZhoV8/ZiLAL+fVELBJw2l0UxPZxWl4V1rpG5i9eiDNgnQGvMMhwdU0dAxqRAGdp3j4PQAxGDzKAHrZbWn8PcWlUoXu1hXPDuA==\n    next\nend\nconfig vpn ipsec phase2-interface\n    edit \"HUB1-VPN1\"\n        set phase1name \"HUB1-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB1-VPN2\"\n        set phase1name \"HUB1-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB2-VPN1\"\n        set phase1name \"HUB2-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB2-VPN2\"\n        set phase1name \"HUB2-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"Cloud-VPN1\"\n        set phase1name \"Cloud-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"Cloud-VPN2\"\n        set phase1name \"Cloud-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\nend\n##Static Routes\nconfig router static\n    edit 1\n        set dst 10.0.0.0 255.0.0.0\n        set gateway 192.168.0.254\n        set device \"port1\"\n    next\n    edit 2\n        set gateway 192.168.0.254\n        set device \"port1\"\n        set distance 200\n    next    \n    edit 0\n        set device \"port3\"\n        set gateway 11.1.1.100\n    next\n    edit 0\n        set device \"port4\"\n        set gateway 12.1.1.100\n    next\n    edit 0\n        set dst 172.16.0.0 255.240.0.0\n        set gateway 192.168.0.254\n        set device \"port1\"\n    next\nend\n##BGP\nconfig router bgp\n    set as 65000\n    set ibgp-multipath enable\n    set network-import-check disable\n    config neighbor\n        edit \"10.10.10.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.11.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.12.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.13.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.14.253\"\n            set remote-as 65000\n        next\n        edit \"10.10.15.253\"\n            set remote-as 65000\n        next\n    end\n    config network\n        edit 1\n            set prefix 10.1.$(base_value).0 255.255.255.0\n        next\n    end\nend"
+                },
+                {
+                    "description": "Used to provision FGT-100E",
+                    "name": "FGT_Provision-100E",
+                    "script": "##Hostname\nconfig system global\n    set admintimeout 60\n    set hostname FGT-Branch$(base_value)\n    set timezone 08\nend\n##Admin PW\nconfig sys admin\n     edit admin\n     set password fortinet\nend\n##Interface config\nconfig system interface\n    edit \"dmz\"\n        unset ip\n    next\n    edit \"port1\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip $(mgmt_ip) 255.255.255.0\n        set allowaccess ping https ssh http fgfm\n        set type physical\n    next\n    edit \"port2\"\n        set vdom \"root\"\n        set type physical\n        set ip 10.1.$(base_value).1 255.255.255.0\n        set allowaccess ping https ssh http\n        set alias \"LAN\"\n        set device-identification enable\n    next\n    edit \"port3\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip 11.1.1.$(base_value) 255.255.255.255\n        set allowaccess ping https ssh\n        set alias \"WAN1\"\n        set role wan\n    next\n    edit \"port4\"\n        set vdom \"root\"\n        set type physical\n        set mode static\n        set ip 12.1.1.$(base_value) 255.255.255.255\n        set allowaccess ping https ssh\n        set alias \"WAN2\"\n        set role wan\n    next        \n    edit \"port5\"\n        set vdom \"root\"\n        set type physical\n        set ip 10.88.1.1 255.255.255.0\n        set allowaccess ping\n        set alias \"Guest\"\n    next\n    edit \"port6\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port7\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port8\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port9\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"port10\"\n        set vdom \"root\"\n        set type physical\n   next\n    edit \"HUB1-VPN1\"\n        set vdom \"root\"\n        set ip 10.10.10.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.10.253 255.255.255.0\n        set interface \"port3\"\n    next\n    edit \"HUB1-VPN2\"\n        set vdom \"root\"\n        set ip 10.10.11.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.11.253 255.255.255.0\n        set interface \"port4\"\n    next\n    edit \"HUB2-VPN1\"\n        set vdom \"root\"\n        set ip 10.10.12.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.12.253 255.255.255.0\n        set interface \"port3\"\n    next\n    edit \"HUB2-VPN2\"\n        set vdom \"root\"\n        set ip 10.10.13.$(base_value) 255.255.255.255\n        set allowaccess ping\n        set type tunnel\n        set remote-ip 10.10.13.253 255.255.255.0\n        set interface \"port4\"\n    next\nend\n##DHCP\nconfig system dhcp server\n    edit 0\n        set ntp-service local\n        set default-gateway 10.1.$(base_value).1\n        set netmask 255.255.255.0\n        set interface \"port2\"\n        config ip-range\n            edit 1\n                set start-ip 10.1.$(base_value).100\n                set end-ip 10.1.$(base_value).200\n            next\n        end\n    next\n    edit 0\n        set dns-service default\n        set default-gateway 10.88.1.1\n        set netmask 255.255.255.0\n        set interface \"port5\"\n        config ip-range\n            edit 1\n                set start-ip 10.88.1.100\n                set end-ip 10.88.1.200\n            next\n        end\n        set timezone-option default\n    next\nend\n##VPN Config\nconfig vpn ipsec phase1-interface\n    edit \"HUB1-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub1-vpn1\"\n        set auto-discovery-receiver enable\n        set remote-gw 13.1.1.1\n        set psksecret ENC fD3IVwzwTLkGddNB37c5qthJePTjYUJAOik3miZ4/VMOHW5rjLlVj/eFQkORmcTgSvQjPaZvr9GJAxqD4hjb1o+rx5whRMIaSbnVQ9fBCi5UiavlAMpUJjnQTro7pzvIN/q/Zov+xXvPvw5vyz4WKVkg/0/T/eC87km59B77JElfCjBHTqlI3CfDbJursGNVcO774Q==\n    next\n    edit \"HUB1-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub1-vpn2\"\n        set auto-discovery-receiver enable\n        set remote-gw 13.1.1.1\n        set psksecret ENC N6mwROzCARKdKwxLzNt3M4Y6SRG/DQAKDhxl9O09wW8qO9m51jcI0yttiLXdz6GQ8uDM8NBqx5ftwWPRdaB+0xLylBu5xNwK9Ub2ecULHovYEmtXVKmocqGteT5jExlMx+RIb4UYNa1j+UIgj/aCvLBq0UjAYSQ+8BmUNjBodQiWOj1dNGvNwmQg+QgpTE7FafIrtg==\n    next\n    edit \"HUB2-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub2-vpn1\"\n        set auto-discovery-receiver enable\n        set remote-gw 14.1.1.1\n        set psksecret ENC 0TzDLBlTZM/0mrOfi6fAjsOuPQCrtPQMXnraw8GJWA9fKLo1kb0kZbJszmRXsmLfzcmN+QsoxW3j+SCOllrYNYxC2VIxfuZJBDaFayOdlQddvt9hYspig+M0uAgkzE+3jYgSHZDHB4hBC/kZnnbi4Je5r4RP+1Gv6kxEPKw3BAyGDoxEOguVRNTuDcPuv0fcRuEG7Q==\n    next\n    edit \"HUB2-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set proposal aes128-sha1\n        set add-route disable\n        set localid \"hub2-vpn2\"\n        set auto-discovery-receiver enable\n        set remote-gw 14.1.1.1\n        set psksecret ENC VGLFppeWRhTyQ0kpG9zM8ppNSaTGTmK9FVHs3yZxQJJWTcgNTwF7EspOvmcVtX4DY3D89vYj6icZ65n1+ispP6N/bPwLggXu3KWTAOfCKFjpmvdQAWv8aY/VNuZxVV42VrmeVEQkCBHQYYcNORg/lL7Co+IKXkXD/Pgdaepz5f0SAvcamW9C02VwvivQUrv3TMzqVw==\n    next\n    edit \"Cloud-VPN1\"\n        set interface \"port3\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set mode-cfg enable\n        set proposal aes128-sha1\n        set localid \"cloud-vpn1\"\n        set remote-gw 15.1.1.1\n        set psksecret ENC aS9uggKJcvxdIoD1gpsovMa6aTCesyF0VezpRCOQE6jVv0BJr4ynLHc81vr3vAC9R6HgB0Eo7TmGyNfFZ3JaNEuq8XgIYFJQKlHyN7bob1c31fN4NB8WoHsu989xbKhO57IuZILuxUILlYlbGEe4jGp8LrBlNNMtGE4Xx3zOwL15IbQZwoq/NZj0KE0vA33sBtiLBA==\n    next\n    edit \"Cloud-VPN2\"\n        set interface \"port4\"\n        set ike-version 2\n        set peertype any\n        set net-device enable\n        set mode-cfg enable\n        set proposal aes128-sha1\n        set localid \"cloud-vpn2\"\n        set remote-gw 15.1.1.1\n        set psksecret ENC 4RzsOHxY7yrwfrQsozclNj85Ov3W7ATsgBKCGaykoqatKnksyFZYGiIdeU2UucxIKXaJPIQetLlvurXXaTauTvXMVCczj6nKN2DhyZhoV8/ZiLAL+fVELBJw2l0UxPZxWl4V1rpG5i9eiDNgnQGvMMhwdU0dAxqRAGdp3j4PQAxGDzKAHrZbWn8PcWlUoXu1hXPDuA==\n    next\nend\nconfig vpn ipsec phase2-interface\n    edit \"HUB1-VPN1\"\n        set phase1name \"HUB1-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB1-VPN2\"\n        set phase1name \"HUB1-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB2-VPN1\"\n        set phase1name \"HUB2-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"HUB2-VPN2\"\n        set phase1name \"HUB2-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"Cloud-VPN1\"\n        set phase1name \"Cloud-VPN1\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\n    edit \"Cloud-VPN2\"\n        set phase1name \"Cloud-VPN2\"\n        set proposal aes128-sha1\n        set auto-negotiate enable\n    next\nend\n##Static Routes\nconfig router static\n    edit 1\n        set dst 10.0.0.0 255.0.0.0\n        set gateway 192.168.0.254\n        set device \"port1\"\n    next\n    edit 2\n        set gateway 192.168.0.254\n        set device \"port1\"\n        set distance 200\n    next    \n    edit 0\n        set device \"port3\"\n        set gateway 11.1.1.100\n    next\n    edit 0\n        set device \"port4\"\n        set gateway 12.1.1.100\n    next\n    edit 0\n        set dst 172.16.0.0 255.240.0.0\n        set gateway 192.168.0.254\n        set device \"port1\"\n    next\nend\n##BGP\nconfig router bgp\n    set as 65000\n    set ibgp-multipath enable\n    set network-import-check disable\n    config neighbor\n        edit \"10.10.10.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.11.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.12.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.13.253\"\n            set link-down-failover enable\n            set remote-as 65000\n            set connect-timer 10\n            set additional-path receive\n        next\n        edit \"10.10.14.253\"\n            set remote-as 65000\n        next\n        edit \"10.10.15.253\"\n            set remote-as 65000\n        next\n    end\n    config network\n        edit 1\n            set prefix 10.1.$(base_value).0 255.255.255.0\n        next\n    end\nend"
+                },
+                {
+                    "description": "used to overwrite OpeningHours Schedule per device from Policy Package",
+                    "name": "Set_Schedule",
+                    "script": "config firewall schedule recurring\n    edit \"OpeningHours\"\n        set start $(opentime)\n        set end $(closetime)\n        set day monday tuesday wednesday thursday friday\n    next\nend"
+                }
+            ],
+            "method": "add",
+            "url": "/pm/config/adom/$(adom_name)/obj/cli/template"
+        },
+        {
+            "data": [
+                {
+                    "description": null,
+                    "member": [
+                        "FGT_Provision"
+                    ],
+                    "name": "FGT_Provision-Group"
+                }
+            ],
+            "method": "add",
+            "url": "/pm/config/adom/$(adom_name)/obj/cli/template-group"
+        },
+        {
+            "data": [
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for VPN1 on either hub.",
+                    "cost": 5,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "VPN1",
+                    "name": "HUB-VPN1",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for VPN2 on either hub.",
+                    "cost": 5,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "VPN2",
+                    "name": "HUB-VPN2",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for HUB1-VPN1 on the branch.",
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "HUB1-VPN1",
+                    "name": "HUB1-VPN1",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 50,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for HUB1-VPN2 on the branch.",
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "HUB1-VPN2",
+                    "name": "HUB1-VPN2",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 50,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for HUB2-VPN1 on the branch.",
+                    "cost": 10,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "HUB2-VPN1",
+                    "name": "HUB2-VPN1",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": "Mapping for HUB2-VPN2 on the branch.",
+                    "cost": 10,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "HUB2-VPN2",
+                    "name": "HUB2-VPN2",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "10.10.14.253",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "Cloud-VPN1",
+                    "name": "Cloud-VPN1",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "10.10.15.253",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "Cloud-VPN2",
+                    "name": "Cloud-VPN2",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "port3",
+                    "name": "WAN1",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 50,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": null,
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "interface": "port4",
+                    "name": "WAN2",
+                    "priority": 0,
+                    "seq-num": null,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 50,
+                    "weight": 1
+                }
+            ],
+            "method": "add",
+            "url": "/pm/config/adom/$(adom_name)/obj/dynamic/virtual-wan-link/members/"
+        },
+        {
+            "data": [
+                {
+                    "description": "Imported from device",
+                    "name": "Best_for_VoIP",
+                    "server": [
+                        "192.168.100.1"
+                    ]
+                },
+                {
+                    "description": "Imported from device",
+                    "name": "Datacenter",
+                    "server": [
+                        "192.168.100.10"
+                    ]
+                },
+                {
+                    "description": "Imported from device",
+                    "name": "General_Internet",
+                    "server": [
+                        "8.8.8.8",
+                        "8.8.4.4"
+                    ]
+                },
+                {
+                    "description": null,
+                    "name": "Hub-MonitorBranch1",
+                    "server": [
+                        "10.1.1.1"
+                    ]
+                },
+                {
+                    "description": null,
+                    "name": "Hub-MonitorBranch2",
+                    "server": [
+                        "10.1.2.1"
+                    ]
+                },
+                {
+                    "description": "Imported from device",
+                    "name": "Ringcentral",
+                    "server": [
+                        "ringcentral.com"
+                    ]
+                }
+            ],
+            "method": "add",
+            "url": "/pm/config/adom/$(adom_name)/obj/dynamic/virtual-wan-link/server/"
+        },
+        {
+            "data": [
+                {
+                    "description": "",
+                    "name": "HUB-SDWAN",
+                    "type": "wanprof"
+                },
+                {
+                    "description": "",
+                    "name": "Branch-SDWAN",
+                    "type": "wanprof"
+                }
+            ],
+            "method": "add",
+            "url": "/pm/wanprof/adom/$(adom_name)"
+        },
+        {
+            "data": [
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Branch1_LAN",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.1.1.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Branch2_LAN",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.1.2.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Branch_Net",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.1.0.0",
+                        "255.255.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Cloud_LAN",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "192.168.200.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "DC1-ISP1",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "13.1.1.1",
+                        "255.255.255.255"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "DC1-ISP2",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "14.1.1.1",
+                        "255.255.255.255"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "DC_LAN",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "192.168.100.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "DC_Server",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "192.168.100.10",
+                        "255.255.255.255"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "DC_Subnet",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "192.168.100.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Guest_Net",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.88.1.0",
+                        "255.255.255.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Local_LAN",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "255.255.255.255",
+                        "255.255.255.255"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "Tunnel_Net",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.10.0.0",
+                        "255.255.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "VoIP_Net",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.1.0.0",
+                        "255.255.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "cache-ttl": 0,
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "fqdn": "autoupdate.opera.com",
+                    "list": null,
+                    "name": "autoupdate.opera.com",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 2,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "cache-ttl": 0,
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "fqdn": "play.google.com",
+                    "list": null,
+                    "name": "google-play",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 2,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "rfc1918-10",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "10.0.0.0",
+                        "255.0.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "rfc1918-172",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "172.16.0.0",
+                        "255.240.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "list": null,
+                    "name": "rfc1918-192",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet": [
+                        "192.168.0.0",
+                        "255.255.0.0"
+                    ],
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 0,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "cache-ttl": 0,
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "fqdn": "swscan.apple.com",
+                    "list": null,
+                    "name": "swscan.apple.com",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 2,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "associated-interface": [
+                        "any"
+                    ],
+                    "cache-ttl": 0,
+                    "color": 0,
+                    "comment": null,
+                    "end-mac": "00:00:00:00:00:00",
+                    "fqdn": "update.microsoft.com",
+                    "list": null,
+                    "name": "update.microsoft.com",
+                    "organization": null,
+                    "policy-group": null,
+                    "sdn-addr-type": 0,
+                    "start-mac": "00:00:00:00:00:00",
+                    "subnet-name": null,
+                    "tagging": null,
+                    "type": 2,
+                    "visibility": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/firewall/address/"
+        },
+        {
+            "data": [
+                {
+                    "allow-routing": 0,
+                    "color": 0,
+                    "comment": null,
+                    "exclude": 0,
+                    "exclude-member": [],
+                    "member": [
+                        "rfc1918-192",
+                        "rfc1918-10",
+                        "rfc1918-172"
+                    ],
+                    "name": "rfc1918",
+                    "tagging": null,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "color": 0,
+                    "comment": null,
+                    "exclude": 0,
+                    "exclude-member": [],
+                    "member": [
+                        "DC_LAN",
+                        "Tunnel_Net",
+                        "Cloud_LAN"
+                    ],
+                    "name": "DC_Networks",
+                    "tagging": null,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "color": 0,
+                    "comment": null,
+                    "exclude": 0,
+                    "exclude-member": [],
+                    "member": [
+                        "DC1-ISP1",
+                        "DC1-ISP2"
+                    ],
+                    "name": "SSH-Allow",
+                    "tagging": null,
+                    "visibility": 1
+                },
+                {
+                    "allow-routing": 0,
+                    "color": 0,
+                    "comment": null,
+                    "exclude": 0,
+                    "exclude-member": [],
+                    "member": [
+                        "Branch_Net",
+                        "Tunnel_Net"
+                    ],
+                    "name": "Allowed_VPN",
+                    "tagging": null,
+                    "visibility": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/firewall/addrgrp/"
+        },
+        {
+            "data": [
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "port5",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "Guest_Net",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "port2",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "LAN",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "VPN1",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "VPN1",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "VPN2",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "VPN2",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "port3",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "WAN1",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 1,
+                    "defmap-intf": "port4",
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "WAN2",
+                    "single-intf": 1
+                },
+                {
+                    "color": 0,
+                    "default-mapping": 0,
+                    "defmap-intf": null,
+                    "defmap-intrazone-deny": 0,
+                    "defmap-zonemember": [],
+                    "description": null,
+                    "egress-shaping-profile": [],
+                    "name": "ssl.root",
+                    "single-intf": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/dynamic/interface/"
+        },
+        {
+            "data": [
+                {
+                    "app-replacemsg": 1,
+                    "comment": null,
+                    "control-default-network-services": 0,
+                    "deep-app-inspection": 1,
+                    "default-network-services": null,
+                    "enforce-default-app-port": 0,
+                    "entries": [
+                        {
+                            "action": 2,
+                            "application": [
+                                16492,
+                                43349
+                            ],
+                            "behavior": [
+                                "all"
+                            ],
+                            "category": [],
+                            "id": 1,
+                            "log": 1,
+                            "log-packet": 0,
+                            "parameters": null,
+                            "per-ip-shaper": [],
+                            "popularity": 31,
+                            "protocols": [
+                                "all"
+                            ],
+                            "quarantine": 0,
+                            "quarantine-expiry": "5m",
+                            "quarantine-log": 1,
+                            "rate-count": 0,
+                            "rate-duration": 60,
+                            "rate-mode": 9,
+                            "rate-track": 0,
+                            "risk": [],
+                            "session-ttl": 0,
+                            "shaper": [],
+                            "shaper-reverse": [],
+                            "sub-category": [],
+                            "technology": [
+                                "all"
+                            ],
+                            "vendor": [
+                                "all"
+                            ]
+                        }
+                    ],
+                    "extended-log": 0,
+                    "name": "Demo_App",
+                    "options": 1,
+                    "other-application-action": 1,
+                    "other-application-log": 1,
+                    "p2p-black-list": 0,
+                    "replacemsg-group": [],
+                    "unknown-application-action": 1,
+                    "unknown-application-log": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/application/list"
+        },
+        {
+            "data": [
+                {
+                    "application": [
+                        17459,
+                        35420,
+                        35421,
+                        36313,
+                        38542
+                    ],
+                    "category": [],
+                    "comment": null,
+                    "name": "Dropbox",
+                    "type": 0
+                },
+                {
+                    "application": [
+                        34640,
+                        152305677,
+                        38938,
+                        26180,
+                        26179,
+                        30251,
+                        16667,
+                        16939
+                    ],
+                    "category": [],
+                    "comment": null,
+                    "name": "SIP",
+                    "type": 0
+                },
+                {
+                    "application": [
+                        15832,
+                        23813,
+                        17735,
+                        15722,
+                        38517,
+                        24318,
+                        29210,
+                        38468,
+                        40934,
+                        40935,
+                        40933,
+                        39381,
+                        43448,
+                        22922,
+                        23260,
+                        35523,
+                        17399,
+                        43449,
+                        16001,
+                        44719,
+                        38466,
+                        43351,
+                        23919,
+                        28076,
+                        39159,
+                        39158,
+                        39157,
+                        41681,
+                        34560
+                    ],
+                    "category": [],
+                    "comment": null,
+                    "name": "Social Media",
+                    "type": 0
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/application/group"
+        },
+        {
+            "data": [
+                {
+                    "app-category": [],
+                    "app-service-type": 0,
+                    "application": [],
+                    "category": [],
+                    "check-reset-range": 3,
+                    "color": 0,
+                    "comment": null,
+                    "fqdn": null,
+                    "helper": 1,
+                    "iprange": "0.0.0.0",
+                    "name": "tcp_8080",
+                    "protocol": 5,
+                    "proxy": 0,
+                    "sctp-portrange": [],
+                    "session-ttl": 0,
+                    "tcp-halfclose-timer": 0,
+                    "tcp-halfopen-timer": 0,
+                    "tcp-portrange": [
+                        "8080"
+                    ],
+                    "tcp-timewait-timer": 0,
+                    "udp-idle-timer": 0,
+                    "udp-portrange": [],
+                    "visibility": 1
+                },
+                {
+                    "app-category": [],
+                    "app-service-type": 0,
+                    "application": [],
+                    "category": [],
+                    "check-reset-range": 3,
+                    "color": 0,
+                    "comment": null,
+                    "fqdn": null,
+                    "helper": 1,
+                    "iprange": "0.0.0.0",
+                    "name": "tcp_8085",
+                    "protocol": 5,
+                    "proxy": 0,
+                    "sctp-portrange": [],
+                    "session-ttl": 0,
+                    "tcp-halfclose-timer": 0,
+                    "tcp-halfopen-timer": 0,
+                    "tcp-portrange": [
+                        "8085"
+                    ],
+                    "tcp-timewait-timer": 0,
+                    "udp-idle-timer": 0,
+                    "udp-portrange": [],
+                    "visibility": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/firewall/service/custom"
+        },
+        {
+            "data": [],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/firewall/service/group"
+        },
+        {
+            "data": [
+                {
+                    "color": 0,
+                    "day": 62,
+                    "end": "17:00",
+                    "name": "OpeningHours",
+                    "start": "08:00"
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/obj/firewall/schedule/recurring"
+        },
+        {
+            "data": [
+                {
+                    "name": "default",
+                    "obj ver": 1,
+                    "package settings": {
+                        "central-nat": 0,
+                        "consolidated-firewall-mode": 0,
+                        "fwpolicy-implicit-log": 0,
+                        "fwpolicy6-implicit-log": 0,
+                        "ngfw-mode": 0
+                    },
+                    "type": "pkg"
+                },
+                {
+                    "name": "Branch-NoSDWAN",
+                    "obj ver": 2,
+                    "package settings": {
+                        "central-nat": 0,
+                        "consolidated-firewall-mode": 0,
+                        "fwpolicy-implicit-log": 1,
+                        "fwpolicy6-implicit-log": 0,
+                        "ngfw-mode": 0
+                    },
+                    "type": "pkg"
+                },
+                {
+                    "name": "Branch",
+                    "obj ver": 59,
+                    "package settings": {
+                        "central-nat": 0,
+                        "consolidated-firewall-mode": 0,
+                        "fwpolicy-implicit-log": 1,
+                        "fwpolicy6-implicit-log": 0,
+                        "ngfw-mode": 0
+                    },
+                    "type": "pkg"
+                },
+                {
+                    "name": "FGT-Cloud",
+                    "obj ver": 4,
+                    "package settings": {
+                        "central-nat": 0,
+                        "consolidated-firewall-mode": 0,
+                        "fwpolicy-implicit-log": 0,
+                        "fwpolicy6-implicit-log": 0,
+                        "ngfw-mode": 0
+                    },
+                    "type": "pkg"
+                },
+                {
+                    "name": "FGT-HUB",
+                    "obj ver": 5,
+                    "package settings": {
+                        "central-nat": 0,
+                        "consolidated-firewall-mode": 0,
+                        "fwpolicy-implicit-log": 0,
+                        "fwpolicy6-implicit-log": 0,
+                        "ngfw-mode": 0
+                    },
+                    "type": "pkg"
+                }
+            ],
+            "method": "add",
+            "url": "pm/pkg/adom/$(adom_name)"
+        },
+        {
+            "data": [
+                {
+                    "_dynamic-member": [
+                        "HUB-VPN1"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 1,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "HUB-VPN2"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 2,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/HUB-SDWAN/system/virtual-wan-link/member"
+        },
+        {
+            "data": [
+                {
+                    "_dynamic-server": [
+                        "Hub-MonitorBranch1"
+                    ],
+                    "addr-mode": 7,
+                    "failtime": 5,
+                    "http-agent": "Chrome/ Safari/",
+                    "interval": 500,
+                    "members": [
+                        "1",
+                        "2"
+                    ],
+                    "name": "Branch1",
+                    "probe-packets": 1,
+                    "protocol": 1,
+                    "recoverytime": 5,
+                    "sla": null,
+                    "sla-fail-log-period": 0,
+                    "sla-pass-log-period": 0,
+                    "threshold-alert-jitter": 0,
+                    "threshold-alert-latency": 0,
+                    "threshold-alert-packetloss": 0,
+                    "threshold-warning-jitter": 0,
+                    "threshold-warning-latency": 0,
+                    "threshold-warning-packetloss": 0,
+                    "update-cascade-interface": 1,
+                    "update-static-route": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/HUB-SDWAN/system/virtual-wan-link/health-check"
+        },
+        {
+            "data": [
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "Branch1_LAN"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 65535,
+                    "gateway": 0,
+                    "groups": [],
+                    "health-check": [
+                        "Branch1"
+                    ],
+                    "hold-down-time": 0,
+                    "id": 1,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-factor": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 3,
+                    "name": "Branch1",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "1",
+                        "2"
+                    ],
+                    "protocol": 0,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "DC_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 1,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/HUB-SDWAN/system/virtual-wan-link/service"
+        },
+        {
+            "data": [
+                {
+                    "_dynamic-member": [
+                        "HUB1-VPN1"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 1,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "HUB1-VPN2"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 2,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "HUB2-VPN1"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 5,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "HUB2-VPN2"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 6,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "Cloud-VPN1"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 7,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "Cloud-VPN2"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 8,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "WAN1"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 3,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                },
+                {
+                    "_dynamic-member": [
+                        "WAN2"
+                    ],
+                    "comment": null,
+                    "cost": 0,
+                    "gateway": "0.0.0.0",
+                    "gateway6": "::",
+                    "ingress-spillover-threshold": 0,
+                    "priority": 0,
+                    "seq-num": 4,
+                    "source": "0.0.0.0",
+                    "source6": "::",
+                    "spillover-threshold": 0,
+                    "status": 1,
+                    "volume-ratio": 1,
+                    "weight": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/Branch-SDWAN/system/virtual-wan-link/member"
+        },
+        {
+            "data": [
+                {
+                    "_dynamic-server": [
+                        "Best_for_VoIP"
+                    ],
+                    "addr-mode": 7,
+                    "failtime": 5,
+                    "http-agent": "Chrome/ Safari/",
+                    "interval": 500,
+                    "members": [
+                        "1",
+                        "6",
+                        "2",
+                        "5"
+                    ],
+                    "name": "Best_for_VoIP",
+                    "probe-packets": 1,
+                    "protocol": 1,
+                    "recoverytime": 5,
+                    "sla": [
+                        {
+                            "id": 1,
+                            "jitter-threshold": 20,
+                            "latency-threshold": 100,
+                            "link-cost-factor": 7,
+                            "packetloss-threshold": 1
+                        }
+                    ],
+                    "sla-fail-log-period": 0,
+                    "sla-pass-log-period": 0,
+                    "threshold-alert-jitter": 0,
+                    "threshold-alert-latency": 0,
+                    "threshold-alert-packetloss": 0,
+                    "threshold-warning-jitter": 0,
+                    "threshold-warning-latency": 0,
+                    "threshold-warning-packetloss": 0,
+                    "update-cascade-interface": 1,
+                    "update-static-route": 1
+                },
+                {
+                    "_dynamic-server": [
+                        "Datacenter"
+                    ],
+                    "addr-mode": 7,
+                    "failtime": 5,
+                    "http-agent": "Chrome/ Safari/",
+                    "interval": 500,
+                    "members": [
+                        "1",
+                        "2",
+                        "6",
+                        "5"
+                    ],
+                    "name": "Datacenter",
+                    "probe-packets": 1,
+                    "protocol": 1,
+                    "recoverytime": 5,
+                    "sla": [
+                        {
+                            "id": 1,
+                            "jitter-threshold": 20,
+                            "latency-threshold": 80,
+                            "link-cost-factor": 7,
+                            "packetloss-threshold": 1
+                        }
+                    ],
+                    "sla-fail-log-period": 10,
+                    "sla-pass-log-period": 10,
+                    "threshold-alert-jitter": 0,
+                    "threshold-alert-latency": 0,
+                    "threshold-alert-packetloss": 0,
+                    "threshold-warning-jitter": 0,
+                    "threshold-warning-latency": 0,
+                    "threshold-warning-packetloss": 0,
+                    "update-cascade-interface": 1,
+                    "update-static-route": 1
+                },
+                {
+                    "_dynamic-server": [
+                        "General_Internet"
+                    ],
+                    "addr-mode": 7,
+                    "failtime": 5,
+                    "http-agent": "Chrome/ Safari/",
+                    "interval": 500,
+                    "members": [
+                        "3",
+                        "4"
+                    ],
+                    "name": "General_Internet",
+                    "probe-packets": 1,
+                    "protocol": 1,
+                    "recoverytime": 5,
+                    "sla": null,
+                    "sla-fail-log-period": 10,
+                    "sla-pass-log-period": 10,
+                    "threshold-alert-jitter": 0,
+                    "threshold-alert-latency": 0,
+                    "threshold-alert-packetloss": 0,
+                    "threshold-warning-jitter": 0,
+                    "threshold-warning-latency": 0,
+                    "threshold-warning-packetloss": 0,
+                    "update-cascade-interface": 1,
+                    "update-static-route": 1
+                },
+                {
+                    "_dynamic-server": [
+                        "Ringcentral"
+                    ],
+                    "addr-mode": 7,
+                    "failtime": 5,
+                    "http-agent": "Chrome/ Safari/",
+                    "interval": 500,
+                    "members": [
+                        "7",
+                        "8"
+                    ],
+                    "name": "Ringcentral",
+                    "probe-packets": 1,
+                    "protocol": 1,
+                    "recoverytime": 5,
+                    "sla": [
+                        {
+                            "id": 1,
+                            "jitter-threshold": 5,
+                            "latency-threshold": 80,
+                            "link-cost-factor": 7,
+                            "packetloss-threshold": 1
+                        }
+                    ],
+                    "sla-fail-log-period": 0,
+                    "sla-pass-log-period": 0,
+                    "threshold-alert-jitter": 0,
+                    "threshold-alert-latency": 0,
+                    "threshold-alert-packetloss": 0,
+                    "threshold-warning-jitter": 0,
+                    "threshold-warning-latency": 0,
+                    "threshold-warning-packetloss": 0,
+                    "update-cascade-interface": 1,
+                    "update-static-route": 1
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/Branch-SDWAN/system/virtual-wan-link/health-check"
+        },
+        {
+            "data": [
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "all"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 65535,
+                    "gateway": 0,
+                    "groups": [],
+                    "hold-down-time": 0,
+                    "id": 2,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-threshold": 10,
+                    "member": [
+                        "3"
+                    ],
+                    "mode": 1,
+                    "name": "Guest",
+                    "packet-loss-weight": 0,
+                    "protocol": 0,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Guest_Net"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 1,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst-negate": 0,
+                    "gateway": 1,
+                    "groups": [],
+                    "hold-down-time": 0,
+                    "id": 1,
+                    "internet-service": 1,
+                    "internet-service-app-ctrl": [
+                        42635
+                    ],
+                    "internet-service-app-ctrl-group": [],
+                    "internet-service-custom": [],
+                    "internet-service-custom-group": [],
+                    "internet-service-group": [],
+                    "internet-service-id": [],
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 4,
+                    "name": "Ringcentral",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "7",
+                        "8"
+                    ],
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": [
+                        {
+                            "health-check": "Ringcentral",
+                            "id": 1
+                        }
+                    ],
+                    "sla-compare-method": 0,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "DC_LAN"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 6001,
+                    "gateway": 0,
+                    "groups": [],
+                    "hold-down-time": 0,
+                    "id": 4,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 5,
+                    "name": "iperf",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "1",
+                        "2",
+                        "5",
+                        "6"
+                    ],
+                    "protocol": 17,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": [
+                        {
+                            "health-check": "Datacenter",
+                            "id": 1
+                        }
+                    ],
+                    "sla-compare-method": 0,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 6001,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "Branch_Net"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 65535,
+                    "gateway": 0,
+                    "groups": [],
+                    "health-check": [
+                        "Best_for_VoIP"
+                    ],
+                    "hold-down-time": 0,
+                    "id": 3,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-factor": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 3,
+                    "name": "Internal_Voice",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "1",
+                        "2",
+                        "5",
+                        "6"
+                    ],
+                    "protocol": 0,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 1,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "DC_LAN"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 65535,
+                    "gateway": 0,
+                    "groups": [],
+                    "health-check": [
+                        "Datacenter"
+                    ],
+                    "hold-down-time": 0,
+                    "id": 5,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-factor": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 3,
+                    "name": "ping",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "1",
+                        "2",
+                        "5",
+                        "6"
+                    ],
+                    "protocol": 1,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 1,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst": [
+                        "DC_Server"
+                    ],
+                    "dst-negate": 0,
+                    "end-port": 22,
+                    "gateway": 0,
+                    "groups": [],
+                    "health-check": [
+                        "Datacenter"
+                    ],
+                    "hold-down-time": 0,
+                    "id": 6,
+                    "internet-service": 0,
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-factor": 0,
+                    "link-cost-threshold": 10,
+                    "mode": 3,
+                    "name": "ssh",
+                    "packet-loss-weight": 0,
+                    "priority-members": [
+                        "1",
+                        "2"
+                    ],
+                    "protocol": 6,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "start-port": 22,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst-negate": 0,
+                    "gateway": 0,
+                    "groups": [],
+                    "hold-down-time": 0,
+                    "id": 7,
+                    "internet-service": 1,
+                    "internet-service-app-ctrl": [],
+                    "internet-service-app-ctrl-group": [
+                        "Social Media"
+                    ],
+                    "internet-service-custom": [],
+                    "internet-service-custom-group": [],
+                    "internet-service-group": [],
+                    "internet-service-id": [],
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-threshold": 10,
+                    "member": [
+                        "3"
+                    ],
+                    "mode": 1,
+                    "name": "Social_Media",
+                    "packet-loss-weight": 0,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                },
+                {
+                    "addr-mode": 7,
+                    "bandwidth-weight": 0,
+                    "default": 0,
+                    "dscp-forward": 0,
+                    "dscp-forward-tag": "000000",
+                    "dscp-reverse": 0,
+                    "dscp-reverse-tag": "000000",
+                    "dst-negate": 0,
+                    "gateway": 0,
+                    "groups": [],
+                    "hold-down-time": 0,
+                    "id": 8,
+                    "internet-service": 1,
+                    "internet-service-app-ctrl": [],
+                    "internet-service-app-ctrl-group": [
+                        "Dropbox"
+                    ],
+                    "internet-service-custom": [],
+                    "internet-service-custom-group": [],
+                    "internet-service-group": [],
+                    "internet-service-id": [],
+                    "jitter-weight": 0,
+                    "latency-weight": 0,
+                    "link-cost-threshold": 10,
+                    "member": [
+                        "4"
+                    ],
+                    "mode": 1,
+                    "name": "Dropbox",
+                    "packet-loss-weight": 0,
+                    "role": 3,
+                    "route-tag": 0,
+                    "sla": null,
+                    "src": [
+                        "Local_LAN"
+                    ],
+                    "src-negate": 0,
+                    "standalone-action": 0,
+                    "status": 1,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "users": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/wanprof/Branch-SDWAN/system/virtual-wan-link/service"
+        },
+        {
+            "data": [],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/pkg/default/firewall/policy"
+        },
+        {
+            "data": [
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "all"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "any"
+                    ],
+                    "email-collect": 0,
+                    "fixedport": 0,
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ippool": 0,
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "nat": 1,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "permit-stun-host": 0,
+                    "policyid": 1,
+                    "profile-protocol-options": [],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "all"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "any"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "6c0a0b46-9fef-51e8-6427-dc490359a305",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/pkg/Branch-NoSDWAN/firewall/policy"
+        },
+        {
+            "data": [
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "application-list": [
+                        "default"
+                    ],
+                    "auto-asic-offload": 1,
+                    "av-profile": [
+                        "default"
+                    ],
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dlp-sensor": [],
+                    "dnsfilter-profile": [],
+                    "dsri": 0,
+                    "dstaddr": [
+                        "all"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "WAN1"
+                    ],
+                    "email-collect": 0,
+                    "emailfilter-profile": [],
+                    "fixedport": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "INTERNET",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ippool": 0,
+                    "ips-sensor": [
+                        "default"
+                    ],
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "Guest_Allow",
+                    "nat": 1,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "permit-stun-host": 0,
+                    "policyid": 6,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Guest_Net"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "Guest_Net"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "certificate-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 1,
+                    "uuid": "572809a2-870d-51e9-b973-eb8813f4321d",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "voip-profile": [],
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webfilter-profile": [
+                        "default"
+                    ],
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "application-list": [
+                        "Demo_App"
+                    ],
+                    "auto-asic-offload": 1,
+                    "av-profile": [],
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dlp-sensor": [],
+                    "dnsfilter-profile": [],
+                    "dsri": 0,
+                    "dstaddr": [
+                        "rfc1918"
+                    ],
+                    "dstaddr-negate": 1,
+                    "dstintf": [
+                        "virtual-wan-link"
+                    ],
+                    "email-collect": 0,
+                    "emailfilter-profile": [],
+                    "fixedport": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "INTERNET",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ippool": 0,
+                    "ips-sensor": [],
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "SD_WAN_INET",
+                    "nat": 1,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "permit-stun-host": 0,
+                    "policyid": 3,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "DNS",
+                        "HTTP",
+                        "HTTPS",
+                        "NTP",
+                        "PING",
+                        "tcp_8080"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Local_LAN"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "LAN"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "certificate-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 1,
+                    "uuid": "a3e033d0-9f34-51e8-dffc-5edb94c30dbb",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "voip-profile": [],
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webfilter-profile": [],
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "application-list": [
+                        "default"
+                    ],
+                    "auto-asic-offload": 1,
+                    "av-profile": [],
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dlp-sensor": [],
+                    "dnsfilter-profile": [],
+                    "dsri": 0,
+                    "dstaddr": [
+                        "DC_Networks",
+                        "Branch_Net"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "virtual-wan-link"
+                    ],
+                    "email-collect": 0,
+                    "emailfilter-profile": [],
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ips-sensor": [],
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "SD_WAN_VPN-OUT",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 2,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Local_LAN"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "LAN"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "certificate-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 1,
+                    "uuid": "f9e4fae4-ecd4-51e7-8a2c-cadd86ac4a42",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "voip-profile": [],
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webfilter-profile": [],
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "application-list": [
+                        "default"
+                    ],
+                    "auto-asic-offload": 1,
+                    "av-profile": [],
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dlp-sensor": [],
+                    "dnsfilter-profile": [],
+                    "dsri": 0,
+                    "dstaddr": [
+                        "Local_LAN"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "LAN"
+                    ],
+                    "email-collect": 0,
+                    "emailfilter-profile": [],
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ips-sensor": [],
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "SD_WAN_VPN-IN",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 5,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "DC_Networks",
+                        "Branch_Net"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "virtual-wan-link"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "certificate-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 1,
+                    "uuid": "f9e5f3e0-ecd4-51e7-8649-b596a314eadf",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "voip-profile": [],
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webfilter-profile": [],
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/pkg/Branch/firewall/policy"
+        },
+        {
+            "data": [
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "rfc1918"
+                    ],
+                    "dstaddr-negate": 1,
+                    "dstintf": [
+                        "any"
+                    ],
+                    "email-collect": 0,
+                    "fixedport": 0,
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "Internet",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ippool": 0,
+                    "logtraffic": 3,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "nat": 1,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "permit-stun-host": 0,
+                    "policyid": 1,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "all"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "any"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "no-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "aab9e948-6537-51e9-a3eb-1ec98c16ea08",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "all"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "VPN1",
+                        "VPN2"
+                    ],
+                    "email-collect": 0,
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "logtraffic": 3,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "VPN_Out",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 2,
+                    "profile-protocol-options": [],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Cloud_LAN"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "LAN"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "d5211e78-71b1-51e9-8771-2dccafe57fb3",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "Cloud_LAN"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "LAN"
+                    ],
+                    "email-collect": 0,
+                    "fsso": 1,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "logtraffic": 3,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "VPN_In",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 3,
+                    "profile-protocol-options": [],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "all"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "VPN1",
+                        "VPN2"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "dad5c5da-71b1-51e9-b08b-e7c6f0ec798a",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/pkg/FGT-Cloud/firewall/policy"
+        },
+        {
+            "data": [
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "all"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "LAN"
+                    ],
+                    "email-collect": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "VPN IN",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 2,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Allowed_VPN"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "virtual-wan-link"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "no-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "90d9e2f0-6517-51e9-32ef-55c629679dca",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "Allowed_VPN"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "virtual-wan-link"
+                    ],
+                    "email-collect": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "VPN OUT",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 3,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "all"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "LAN"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "no-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "90e5c1c4-6517-51e9-5295-fa4b7672aa51",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "Allowed_VPN"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "virtual-wan-link"
+                    ],
+                    "email-collect": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "VPN",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "Branch<->Branch",
+                    "nat": 0,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "policyid": 4,
+                    "profile-protocol-options": [],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "Allowed_VPN"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "virtual-wan-link"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "9106bafa-6517-51e9-caac-3016061bf58a",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                },
+                {
+                    "_byte": 0,
+                    "_first_hit": 0,
+                    "_first_session": 0,
+                    "_global-dst-intf": null,
+                    "_global-src-intf": null,
+                    "_global-vpn": [],
+                    "_global-vpn-tgt": 0,
+                    "_hitcount": 0,
+                    "_last_hit": 0,
+                    "_last_session": 0,
+                    "_pkts": 0,
+                    "_sesscount": 0,
+                    "action": 1,
+                    "anti-replay": 1,
+                    "app-group": [],
+                    "auto-asic-offload": 1,
+                    "block-notification": 0,
+                    "captive-portal-exempt": 0,
+                    "capture-packet": 0,
+                    "custom-log-fields": [],
+                    "delay-tcp-npu-session": 0,
+                    "diffserv-forward": 0,
+                    "diffserv-reverse": 0,
+                    "disclaimer": 0,
+                    "dsri": 0,
+                    "dstaddr": [
+                        "all"
+                    ],
+                    "dstaddr-negate": 0,
+                    "dstintf": [
+                        "WAN1"
+                    ],
+                    "email-collect": 0,
+                    "fixedport": 0,
+                    "fsso": 0,
+                    "fsso-agent-for-ntlm": [],
+                    "fsso-groups": [],
+                    "geoip-anycast": 0,
+                    "global-label": "INTERNET",
+                    "groups": [],
+                    "inspection-mode": 1,
+                    "internet-service": 0,
+                    "internet-service-src": 0,
+                    "internet-service-src-custom": [],
+                    "internet-service-src-custom-group": [],
+                    "internet-service-src-group": [],
+                    "internet-service-src-id": [],
+                    "internet-service-src-negate": 0,
+                    "ippool": 0,
+                    "logtraffic": 2,
+                    "logtraffic-start": 0,
+                    "match-vip": 0,
+                    "match-vip-only": 0,
+                    "name": "Internet out",
+                    "nat": 1,
+                    "natip": [
+                        "0.0.0.0",
+                        "0.0.0.0"
+                    ],
+                    "np-acceleration": 1,
+                    "per-ip-shaper": [],
+                    "permit-any-host": 0,
+                    "permit-stun-host": 0,
+                    "policyid": 1,
+                    "profile-protocol-options": [
+                        "default"
+                    ],
+                    "profile-type": 0,
+                    "radius-mac-auth-bypass": 0,
+                    "replacemsg-override-group": [],
+                    "reputation-direction": 2,
+                    "reputation-minimum": 0,
+                    "rtp-nat": 0,
+                    "schedule": [
+                        "always"
+                    ],
+                    "schedule-timeout": 0,
+                    "service": [
+                        "ALL"
+                    ],
+                    "service-negate": 0,
+                    "session-ttl": 0,
+                    "srcaddr": [
+                        "all"
+                    ],
+                    "srcaddr-negate": 0,
+                    "srcintf": [
+                        "LAN"
+                    ],
+                    "ssl-mirror": 0,
+                    "ssl-mirror-intf": [],
+                    "ssl-ssh-profile": [
+                        "no-inspection"
+                    ],
+                    "status": 1,
+                    "tcp-mss-receiver": 0,
+                    "tcp-mss-sender": 0,
+                    "tcp-session-without-syn": 2,
+                    "timeout-send-rst": 0,
+                    "tos": "0x00",
+                    "tos-mask": "0x00",
+                    "tos-negate": 0,
+                    "traffic-shaper": [],
+                    "traffic-shaper-reverse": [],
+                    "users": [],
+                    "utm-status": 0,
+                    "uuid": "9127adb4-6517-51e9-c5a3-317498b23fc8",
+                    "vlan-cos-fwd": 255,
+                    "vlan-cos-rev": 255,
+                    "vlan-filter": null,
+                    "vpn_dst_node": null,
+                    "vpn_src_node": null,
+                    "wccp": 0,
+                    "webcache-https": 0,
+                    "webproxy-forward-server": [],
+                    "webproxy-profile": []
+                }
+            ],
+            "method": "add",
+            "url": "pm/config/adom/$(adom_name)/pkg/FGT-HUB/firewall/policy"
+        }
+    ],
+    "vars": [
+        "adom_name",
+        "adom_desc"
+    ]
+}
