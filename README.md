@@ -151,7 +151,7 @@ FGT-Branch1 | ... | port1
 This configuration will create a per device object for the dynamic interface "LAN" with the value port1 for device FGT-Branch1.
 
 #### daddr_value
-The dint_ prefix will create a per device mapping to an address object. 
+The daddr_ prefix will create a per device mapping to an address object. 
 
 Supports following format 
 Subnet: 192.168.0.0/24
