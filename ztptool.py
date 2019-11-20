@@ -2,7 +2,7 @@ import eel
 from tkinter import filedialog
 from tkinter import *
 from openpyxl import load_workbook
-import json, requests, ipaddress, sys, platform
+import json, requests, ipaddress, sys, platform, io
 
 requests.packages.urllib3.disable_warnings()
 
@@ -223,7 +223,9 @@ def get_and_add(std_objects, objecturls):
 
 def openbook(filename):
     try:
-        wb = load_workbook(filename=filename, read_only=True)
+        with open(filename, "rb") as f:
+            in_mem_file = io.BytesIO(f.read())
+        wb = load_workbook(in_mem_file)
         ws = wb['Sheet1']
 
         ## Get Columns
@@ -257,27 +259,40 @@ def openbook(filename):
                 newdict = {}
                 for i in headings:
                     if i != 'nul':
-                        newdict[i] = ws.cell(row=row, column=col).value
+                        if ws.cell(row=row, column=col).value is None:
+                            newdict[i] = ""
+                        else:
+                            newdict[i] = str(ws.cell(row=row, column=col).value)
                         if i == "Device_Name":
                             device_meta_data[newdict['Device_Name']] = {}
                             device_dint_data[newdict['Device_Name']] = {}
                             device_sdwanint_data[newdict['Device_Name']] = {}
                             device_daddr_data[newdict['Device_Name']] = {}
                         if i[0:5] == "meta_":
-                            device_meta_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                            if ws.cell(row=row, column=col).value is None:
+                                device_meta_data[newdict['Device_Name']][i[5:]] = ""
+                            else:
+                                device_meta_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
                         if i[0:5] == "dint_":
-                            device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                            if ws.cell(row=row, column=col).value is None:
+                                device_dint_data[newdict['Device_Name']][i[5:]] = ""
+                            else:
+                                device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
                         if i[0:9] == "sdwanint_":
                             sdwanintsettings = i[9:].split("|")
                             try:
                                 device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]]
                             except:
                                 device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]] = {}
-                            device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
-                                sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
+                            if ws.cell(row=row, column=col).value is not None:
+                                device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
+                                    sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
 
                         if i[0:6] == "daddr_":
-                            device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
+                            if ws.cell(row=row, column=col).value is None:
+                                device_daddr_data[newdict['Device_Name']][i[6:]] = ""
+                            else:
+                                device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
 
                         col += 1
 
@@ -709,38 +724,46 @@ def add_sdwaninterface_mapping(adomname, devicename, interfacename, vdom):
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_sdwanint_res = json.loads(res.text)
-    json_sdwanint = json_sdwanint_res['result'][0]['data']
-    json_sdwanint.pop('dynamic_mapping', None)
-    json_sdwanint.pop('obj seq', None)
-    json_sdwanint.pop('name', None)
+    if json_sdwanint_res['result'][0]['status']['message'] == "OK":
+        json_sdwanint = json_sdwanint_res['result'][0]['data']
+        json_sdwanint.pop('dynamic_mapping', None)
+        json_sdwanint.pop('obj seq', None)
+        json_sdwanint.pop('name', None)
 
-    json_sdwanint["_scope"] = [
-        {
-            "name": devicename,
-            "vdom": vdom
-        }
-    ]
-
-    for key in device_sdwanint_data[devicename][interfacename]:
-        json_sdwanint[key] = device_sdwanint_data[devicename][interfacename][key]
-
-    requestid = 1
-    jsondata = {
-        "method": "add",
-        "params": [
+        json_sdwanint["_scope"] = [
             {
-                "url": "pm/config/adom/" + adomname + "/obj/dynamic/virtual-wan-link/members/" + interfacename + "/dynamic_mapping",
-                "data": json_sdwanint
+                "name": devicename,
+                "vdom": vdom
             }
-        ],
-        "id": requestid,
-        "session": fmg_sessionid
-    }
-    res = session.post(fmgurl, json=jsondata, verify=False)
-    print(json_sdwanint)
-    print(res.text)
-    json_mapsdwanint = json.loads(res.text)
-    status_mapsdwanint = json_mapsdwanint['result'][0]['status']['message']
+        ]
+
+        proceed_makesdwanint = 0
+        for key in device_sdwanint_data[devicename][interfacename]:
+            proceed_makesdwanint = 1
+            json_sdwanint[key] = device_sdwanint_data[devicename][interfacename][key]
+
+        if proceed_makesdwanint == 1:
+            requestid = 1
+            jsondata = {
+                "method": "add",
+                "params": [
+                    {
+                        "url": "pm/config/adom/" + adomname + "/obj/dynamic/virtual-wan-link/members/" + interfacename + "/dynamic_mapping",
+                        "data": json_sdwanint
+                    }
+                ],
+                "id": requestid,
+                "session": fmg_sessionid
+            }
+            res = session.post(fmgurl, json=jsondata, verify=False)
+            print(json_sdwanint)
+            print(res.text)
+            json_mapsdwanint = json.loads(res.text)
+            status_mapsdwanint = json_mapsdwanint['result'][0]['status']['message']
+        else:
+            status_mapsdwanint = "NoData"
+    else:
+        status_mapsdwanint = json_sdwanint_res['result'][0]['status']['message']
     return status_mapsdwanint
 
 
@@ -1006,46 +1029,56 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 ##map interfaces
 
                 for key in device_dint_data[devicedata['Device_Name']]:
-                    status_mapdint = add_policy_interface_member(fmg_adom, key,
+                    if device_dint_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add dynamic map for interface \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_mapdint = add_policy_interface_member(fmg_adom, key,
                                                                  device_dint_data[devicedata['Device_Name']][key],
                                                                  devicedata['Device_Name'])
 
-                    if status_mapdint == "OK":
-                        return_html += "Add dynamic map for interface \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
-                    else:
-                        return_html += "Add dynamic map for interface \"" + key + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
-                        return_html += status_mapdint + "<br>\n"
+                        if status_mapdint == "OK":
+                            return_html += "Add dynamic map for interface \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add dynamic map for interface \"" + key + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdint + "<br>\n"
 
                 ### MAP DYNAMIC ADDRESS OJBECTS
 
                 for key in device_daddr_data[devicedata['Device_Name']]:
-                    status_mapdaddr = add_daddr(fmg_adom, key, device_daddr_data[devicedata['Device_Name']][key],
-                                                devicedata['Device_Name'], 'root')
-                    if status_mapdaddr == "OK":
-                        return_html += "Add dynamic map for address \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    if device_daddr_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add dynamic map for address \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                     else:
-                        return_html += "Add dynamic map for address \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
-                        return_html += status_mapdaddr + "<br>\n"
+                        status_mapdaddr = add_daddr(fmg_adom, key, device_daddr_data[devicedata['Device_Name']][key],
+                                                    devicedata['Device_Name'], 'root')
+                        if status_mapdaddr == "OK":
+                            return_html += "Add dynamic map for address \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add dynamic map for address \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdaddr + "<br>\n"
 
                 ### MAP SDWAN Interfaces
-
                 for key in device_sdwanint_data[devicedata['Device_Name']]:
-                    statu_mapsdwanint = add_sdwaninterface_mapping(fmg_adom, devicedata['Device_Name'], key, 'root')
-                    if statu_mapsdwanint == "OK":
+                    status_mapsdwanint = add_sdwaninterface_mapping(fmg_adom, devicedata['Device_Name'], key, 'root')
+                    if status_mapsdwanint == "OK":
                         return_html += "Add dynamic SDWAN Map for interface \"" + key + "\" succcessful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    elif status_mapsdwanint == "NoData":
+                        return_html += "Add SD-WAN interface map for \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                     else:
                         return_html += "Add dynamic SDWAN Map for interface \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                        return_html += status_mapsdwanint + "<br>\n"
 
                 ## Assign SDWAN Template
-
-                status_assignsdwantemplate = assign_sdwan_template(fmg_adom, devicedata['SDWAN_Template'],
-                                                                   devicedata['Device_Name'], 'root')
-                if status_assignsdwantemplate == "OK":
-                    return_html += "Assign SDWAN template \"" + devicedata[
-                        'SDWAN_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                if devicedata['SDWAN_Template'] == "":
+                    return_html += "Assign SDWAN template \"{not defined}\" <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                 else:
-                    return_html += "Assign SDWAN template \"" + devicedata[
-                        'SDWAN_Template'] + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                    status_assignsdwantemplate = assign_sdwan_template(fmg_adom, devicedata['SDWAN_Template'],
+                                                                       devicedata['Device_Name'], 'root')
+                    if status_assignsdwantemplate == "OK":
+                        return_html += "Assign SDWAN template \"" + devicedata[
+                            'SDWAN_Template'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                    else:
+                        return_html += "Assign SDWAN template \"" + devicedata[
+                            'SDWAN_Template'] + "\" failed ><span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 ## Add install Target
                 status_add_inst_trgt = add_install_target(devicedata['Device_Name'], fmg_adom, "root",
@@ -1400,10 +1433,16 @@ def getsettings_exportadom():
             settings = json.load(json_settings)
             default_fmg = settings['fmg']
             default_user = settings['user']
+            try:
+                default_passwd = settings['passwd']
+            except:
+                default_passwd = ""
         json_settings.close()
     except:
         default_fmg = ""
         default_user = ""
+        default_passwd = ""
+        default_adom = ""
 
     return_html = '''
             <div class="starter-template">
@@ -1430,7 +1469,7 @@ def getsettings_exportadom():
         </div>
         <div class="form-group">
           <label for="fmgpassword">FortiManager Password</label>
-          <input type="password" class="form-control" id="fmgpassword">
+          <input type="password" class="form-control" id="fmgpassword" value="%s">
         </div>
         <div class="form-group">
           <label for="fmgadom">FortiManager ADOM to export</label>
@@ -1444,7 +1483,7 @@ def getsettings_exportadom():
       </form>
 
     </div>
-          ''' % (default_fmg, default_user)
+          ''' % (default_fmg, default_user, default_passwd)
 
     eel.pageupdate(return_html)
 
@@ -1454,11 +1493,28 @@ def getsettings_devices():
     try:
         with open('settings.json') as json_settings:
             settings = json.load(json_settings)
-            default_fmg = settings['fmg']
-            default_user = settings['user']
+            try:
+                default_fmg = settings['fmg']
+            except:
+                default_fmg = ""
+            try:
+                default_user = settings['user']
+            except:
+                default_user = ""
+            try:
+                default_passwd = settings['passwd']
+            except:
+                default_passwd = ""
+            try:
+                default_adom = settings['adom']
+            except:
+                default_adom = ""
+        json_settings.close()
     except:
         default_fmg = ""
         default_user = ""
+        default_passwd = ""
+        default_adom = ""
 
     return_html = '''
             <div class="starter-template">
@@ -1485,11 +1541,11 @@ def getsettings_devices():
         </div>
         <div class="form-group">
           <label for="fmgpassword">FortiManager Password</label>
-          <input type="password" class="form-control" id="fmgpassword">
+          <input type="password" class="form-control" id="fmgpassword" value="%s">
         </div>
         <div class="form-group">
           <label for="fmgadom">FortiManager ADOM</label>
-          <input type="text" class="form-control" id="fmgadom" value="">
+          <input type="text" class="form-control" id="fmgadom" value="%s">
         </div>
         <div form-group>
           <button type="button" onclick="getFolder()" class="btn btn-secondary">Select File</button>
@@ -1501,7 +1557,7 @@ def getsettings_devices():
       </form>
 
     </div>
-          ''' % (default_fmg, default_user)
+          ''' % (default_fmg, default_user, default_passwd, default_adom)
 
     eel.pageupdate(return_html)
 
