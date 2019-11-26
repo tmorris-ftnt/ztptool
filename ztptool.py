@@ -304,6 +304,95 @@ def openbook(filename):
     return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
 
 
+def get_workspace():
+    requestid = 1
+    jsondata = {
+        "method": "get",
+        "params": [
+            {
+                "url": "/cli/global/system/global"
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
+
+    try:
+        workspacemode = response['result'][0]['data']['workspace-mode']
+    except:
+        workspacemode = 3
+    return workspacemode
+
+
+def lock_adom(adom):
+    jsondata = {
+      "method":"exec",
+      "params":[
+        {
+            "url":"dvmdb/adom/" + adom + "/workspace/lock",
+        }
+      ],
+      "id":1,
+      "session":fmg_sessionid
+    }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
+    return response['result'][0]['status']['message']
+
+
+def unlock_adom(adom):
+
+    jsondata = {
+        "method": "exec",
+        "params": [
+            {
+                "url": "dvmdb/adom/" + adom + "/workspace/unlock",
+            }
+        ],
+        "id": 1,
+        "session": fmg_sessionid
+    }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
+    return response['result'][0]['status']['message']
+
+def workspace_commit(adom):
+    jsondata = {
+        "method": "exec",
+        "params": [
+            {
+                "url": "dvmdb/adom/" + adom + "/workspace/commit",
+            }
+        ],
+        "id": 1,
+        "session": fmg_sessionid
+    }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
+    return response['result'][0]['status']['message']
+
+
+
+
 def get_meta():
     requestid = 2
     jsondata = {
@@ -950,6 +1039,30 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
             return_html += "FortiManager ADOM does not exist <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             proceed = False
 
+        ## Get workspace mode
+
+        workspacemode = get_workspace()
+        if workspacemode == 3:
+            return_html += "Error determing workspace mode <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            proceed = False
+        elif workspacemode == 2:
+            return_html += "FortiManager is in workflow mode (not supported) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            proceed = False
+        elif workspacemode == 1:
+            return_html += "FortiManager is in workflow mode (not supported on FMG < 6.2.3 as per FMG Bug 0541911) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            #proceed = False
+        elif workspacemode == 0:
+            return_html += "FortiManager has workspace mode disabled <span class=\"glyphicon glyphicon-info-sign\" style=\"color:green\"></span><br>\n"
+
+        ## Lock ADOM is workspace mode is enabled
+
+        if workspacemode == 1:
+            get_lock = lock_adom(fmg_adom)
+            if get_lock == "OK":
+                return_html += "Lock ADOM \"" + fmg_adom + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+            else:
+                return_html += "Lock ADOM \"" + fmg_adom + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                proceed = False
         ## check for required fields in headings
         required_headings = ["Device_Name", "Platform", "Device_SN", "CLI_Template", "Post_CLI_Template",
                              "Policy_Package",
@@ -993,6 +1106,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 ## Add meta data to device
                 update_device(fmg_adom, devicedata['Device_Name'])
 
+
                 ## Assign Initial CLI Template
                 status_clitemp = ""
                 qi_status = False
@@ -1011,6 +1125,10 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             'CLI_Template'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 if status_clitemp == "OK":
+                    if workspacemode == 1:
+                        workspace_commit(fmg_adom)
+
+
                     ##Install Device Settings
                     qi_status = track_quickinstall(quickinstall(fmg_adom, devicedata['Device_Name'], 'root'))
                     if qi_status:
@@ -1018,9 +1136,14 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                     else:
                         return_html += "Quick install device settings failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
+
                     ##Unassign CLI Template
                     unassign_cli_template(fmg_adom, devicedata['CLI_Template'], devicedata['Device_Name'])
-                    unassign_cli_template(fmg_adom, devicedata['CLI_Template'], devicedata['Device_Name'])
+
+
+                    if workspacemode == 1:
+                        workspace_commit(fmg_adom)
+
 
             if qi_status == True:
 
@@ -1105,6 +1228,10 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
                 if status_add_inst_trgt == "OK":
                     ## install package
+
+                    if workspacemode == 1:
+                        workspace_commit(fmg_adom)
+
                     pkg_status = track_policyinstall(
                         install_pkg(devicedata['Policy_Package'], fmg_adom, devicedata['Device_Name'], 'root'))
                     if pkg_status == True:
@@ -1118,6 +1245,13 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         pass
 
             sendupdate(return_html)
+
+        if workspacemode == 1:
+            get_unlock = unlock_adom(fmg_adom)
+            if get_unlock == "OK":
+                return_html += "Unlock ADOM \"" + fmg_adom + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+            else:
+                return_html += "Unlock ADOM \"" + fmg_adom + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
     ### LOGOUT OF FMG
     if fmg_sessionid is not None:
@@ -1360,8 +1494,29 @@ def btn_getjsonfile():
     filename = filedialog.askopenfilename(initialdir="/", title="Select file",
                                           filetypes=(("JSON Files", "*.json"), ("all files", "*.*")))
     root.update()  # to make dialog close on MacOS
-    print(filename)
     return filename
+
+
+@eel.expose
+def savesettings(save_fmg,save_user,save_adom):
+    settingsfiledata = '''{
+  "fmg": "%s",
+  "user": "%s",
+  "passwd": "",
+  "adom": "%s"
+}
+''' % (save_fmg, save_user, save_adom)
+
+    try:
+        setting_file = open("settings.json", "wt")
+        setting_file.write(settingsfiledata)
+        setting_file.close()
+        return ["Settings Saved", "success"]
+    except:
+        return ["Error: Could not save settings", "danger"]
+
+
+
 
 
 @eel.expose
@@ -1369,12 +1524,28 @@ def getsettings_adom():
     try:
         with open('settings.json') as json_settings:
             settings = json.load(json_settings)
-            default_fmg = settings['fmg']
-            default_user = settings['user']
+            try:
+                default_fmg = settings['fmg']
+            except:
+                default_fmg = ""
+            try:
+                default_user = settings['user']
+            except:
+                default_user = ""
+            try:
+                default_passwd = settings['passwd']
+            except:
+                default_passwd = ""
+            try:
+                default_adom = settings['adom']
+            except:
+                default_adom = ""
         json_settings.close()
     except:
         default_fmg = ""
         default_user = ""
+        default_passwd = ""
+        default_adom = ""
 
     return_html = '''
             <div class="starter-template">
@@ -1412,7 +1583,7 @@ def getsettings_adom():
           <input type="text" class="form-control" id="fmgadomdesc" value="">
         </div>        
         <div form-group>
-          <button type="button" onclick="getFileADOM()" class="btn btn-secondary">Select File</button>
+          <button type="button" onclick="getFileADOM()" class="btn btn-secondary btn-sm">Select File</button>
           JSON Path: <span id="filepath">/</span><br/><br/>
         </div>
         <div class="form-group">
@@ -1431,12 +1602,22 @@ def getsettings_exportadom():
     try:
         with open('settings.json') as json_settings:
             settings = json.load(json_settings)
-            default_fmg = settings['fmg']
-            default_user = settings['user']
+            try:
+                default_fmg = settings['fmg']
+            except:
+                default_fmg = ""
+            try:
+                default_user = settings['user']
+            except:
+                default_user = ""
             try:
                 default_passwd = settings['passwd']
             except:
                 default_passwd = ""
+            try:
+                default_adom = settings['adom']
+            except:
+                default_adom = ""
         json_settings.close()
     except:
         default_fmg = ""
@@ -1548,8 +1729,8 @@ def getsettings_devices():
           <input type="text" class="form-control" id="fmgadom" value="%s">
         </div>
         <div form-group>
-          <button type="button" onclick="getFolder()" class="btn btn-secondary">Select File</button>
-          Excel Path: <span id="filepath">/</span><br/><br/>
+          <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Select File</button>
+          Excel Path: <span id="filepath">/</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
         </div>
         <div class="form-group">
           <button type="button" onclick="processxlsx(document.getElementById('filepath').innerHTML)" class="btn btn-primary">Submit</button>
