@@ -92,6 +92,7 @@
 </nav>
 
 <main role="main" class="container">
+  <div id="alertbox" class="float-right"></div>
 <div id="mainpage">
 
 </div>
@@ -124,7 +125,7 @@ var dosya_path = await eel.btn_getjsonfile()();
 
 function processxlsx(fp) {
   if (fp === "/") {
-    alert("Please Select an xlsx file first.")
+    bsalert("Please Select an xlsx file first.", "warning")
   } else {
     eel.btn_checkxlsx(fp,document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgpassword').value,document.getElementById('fmgadom').value)
   }
@@ -140,6 +141,15 @@ function processadom(fp) {
 
 function processexportadom() {
     eel.btn_checkexportadom(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgpassword').value,document.getElementById('fmgadom').value)
+}
+
+async function savesettings() {
+  let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value)()
+  bsalert(savesettingsmsg[0], savesettingsmsg[1])
+}
+
+function bsalert(msg,role) {
+  document.getElementById("alertbox").innerHTML = '<div class="alert alert-' + role + ' alert-dismissible fade show" role="alert">' + msg + '<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button></div>';
 }
 
 eel.expose(pageupdate);
