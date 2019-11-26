@@ -184,7 +184,13 @@ The settings.json file in the root directory contains variables for setting the 
 Variable | Setting 
 -------- | ------- 
 fmg | IP Address or Hostname of FortiManager
-user | Fortimanager username
+user | FortiManager username
+passwd | FortiManager password (do not use in production enviroments)
+adom | FortiManager ADOM
+
+You can also use the save settings option on the Import Devices page to save the current settings to the file.
+
+> The `passwd` field will not be populated if you use this option.
 
 Example
 `{
