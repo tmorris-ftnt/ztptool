@@ -187,6 +187,7 @@ fmg | IP Address or Hostname of FortiManager
 user | FortiManager username
 passwd | FortiManager password (do not use in production enviroments)
 adom | FortiManager ADOM
+path | Path to Excel file
 
 You can also use the save settings option on the Import Devices page to save the current settings to the file.
 
