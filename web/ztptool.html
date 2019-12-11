@@ -48,7 +48,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>ZTP Tool v1.0.9-alpha</p>
+        <p>ZTP Tool v1.0.10-alpha</p>
         <p>Supports:<ul>
         <li>FortiManager 6.2.1</li>
         <li>FortiManager 6.2.2</li>
@@ -144,7 +144,7 @@ function processexportadom() {
 }
 
 async function savesettings() {
-  let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value)()
+  let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value,document.getElementById('filepath').innerHTML)()
   bsalert(savesettingsmsg[0], savesettingsmsg[1])
 }
 
