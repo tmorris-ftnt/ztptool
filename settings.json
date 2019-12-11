@@ -1,4 +1,7 @@
 {
   "fmg": "",
-  "user": "apiadmin"
+  "user": "admin",
+  "passwd": "",
+  "adom": "root",
+  "path": "/"
 }
