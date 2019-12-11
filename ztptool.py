@@ -1049,7 +1049,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
             return_html += "FortiManager is in workflow mode (not supported) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             proceed = False
         elif workspacemode == 1:
-            return_html += "FortiManager is in workflow mode (not supported on FMG < 6.2.3 as per FMG Bug 0541911) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            return_html += "FortiManager is in workspace mode (not supported on FMG < 6.2.3 as per FMG Bug 0541911) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             #proceed = False
         elif workspacemode == 0:
             return_html += "FortiManager has workspace mode disabled <span class=\"glyphicon glyphicon-info-sign\" style=\"color:green\"></span><br>\n"
@@ -1110,7 +1110,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 ## Assign Initial CLI Template
                 status_clitemp = ""
                 qi_status = False
-                if devicedata['CLI_Template'] is None:
+                if devicedata['CLI_Template'] == "" or devicedata['CLI_Template'] is None:
                     return_html += "Assign CLI Template {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                     qi_status = True
                 else:
@@ -1191,7 +1191,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         return_html += status_mapsdwanint + "<br>\n"
 
                 ## Assign SDWAN Template
-                if devicedata['SDWAN_Template'] == "":
+                if devicedata['SDWAN_Template'] == "" or devicedata['SDWAN_Template'] is None:
                     return_html += "Assign SDWAN template \"{not defined}\" <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                 else:
                     status_assignsdwantemplate = assign_sdwan_template(fmg_adom, devicedata['SDWAN_Template'],
@@ -1214,7 +1214,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         'Policy_Package'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 ## Assign Post CLI Template
-                if devicedata['Post_CLI_Template'] is None:
+                if devicedata['Post_CLI_Template'] == "" or devicedata['Post_CLI_Template'] is None:
                     return_html += "Assign Post CLI Template {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                 else:
                     status_clitempgrp = assign_cli_template(fmg_adom, devicedata['Post_CLI_Template'],
@@ -1498,14 +1498,15 @@ def btn_getjsonfile():
 
 
 @eel.expose
-def savesettings(save_fmg,save_user,save_adom):
+def savesettings(save_fmg,save_user,save_adom,save_path):
     settingsfiledata = '''{
   "fmg": "%s",
   "user": "%s",
   "passwd": "",
-  "adom": "%s"
+  "adom": "%s",
+  "path": "%s"
 }
-''' % (save_fmg, save_user, save_adom)
+''' % (save_fmg, save_user, save_adom, save_path)
 
     try:
         setting_file = open("settings.json", "wt")
@@ -1690,6 +1691,10 @@ def getsettings_devices():
                 default_adom = settings['adom']
             except:
                 default_adom = ""
+            try:
+                default_path = settings['path']
+            except:
+                default_path = "/"
         json_settings.close()
     except:
         default_fmg = ""
@@ -1730,7 +1735,7 @@ def getsettings_devices():
         </div>
         <div form-group>
           <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Select File</button>
-          Excel Path: <span id="filepath">/</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
+          Excel Path: <span id="filepath">%s</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
         </div>
         <div class="form-group">
           <button type="button" onclick="processxlsx(document.getElementById('filepath').innerHTML)" class="btn btn-primary">Submit</button>
@@ -1738,7 +1743,7 @@ def getsettings_devices():
       </form>
 
     </div>
-          ''' % (default_fmg, default_user, default_passwd, default_adom)
+          ''' % (default_fmg, default_user, default_passwd, default_adom, default_path)
 
     eel.pageupdate(return_html)
 
