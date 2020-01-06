@@ -277,7 +277,7 @@ def openbook(filename):
                             if ws.cell(row=row, column=col).value is None:
                                 device_dint_data[newdict['Device_Name']][i[5:]] = ""
                             else:
-                                device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                                device_dint_data[newdict['Device_Name']][i[5:]] = (str(ws.cell(row=2, column=14).value)).split(",")
                         if i[0:9] == "sdwanint_":
                             sdwanintsettings = i[9:].split("|")
                             try:
@@ -780,9 +780,7 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
                                 "vdom": "root"
                             }
                         ],
-                        "local-intf": [
-                            realinterface
-                        ],
+                        "local-intf": realinterface,
                         "intrazone-deny": 0
                     }
 
@@ -1753,7 +1751,7 @@ session = requests.session()
 
 
 try:
-    eel.start('ztptool.html', size=(790, 850), disable_cache=True)
+    eel.start('ztptool.html', size=(790, 850), disable_cache=True, mode='default')
 except EnvironmentError:
     # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
     if sys.platform in ['win32', 'win64'] and int(platform.release()) >= 10:
