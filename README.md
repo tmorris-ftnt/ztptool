@@ -154,8 +154,11 @@ This configuration will create a per device object for the dynamic interface "LA
 The daddr_ prefix will create a per device mapping to an address object. 
 
 Supports following format 
+
 Subnet: 192.168.0.0/24
-Sbunet: 192.168.0.0 255.255.255.0
+
+Subnet: 192.168.0.0 255.255.255.0
+
 Range: 192.168.0.5 - 192.168.0.10
 
 Example Excel Sheet
