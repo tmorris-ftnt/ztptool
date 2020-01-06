@@ -11,27 +11,27 @@ requests.packages.urllib3.disable_warnings()
 eel.init('web', allowed_extensions=['.js', '.html'])
 
 
-def browserselection(browsermode)
-browser = ""
-browsermode = ""
-try:
-    with open('browser.json') as json_browser:
-        browsersettings = json.load(json_browser)
-        try:
-            browser = browsersettings['browser']
+def browserselection(browsermode):
+    browser = ""
+    browsermode = ""
+    try:
+        with open('browser.json') as json_browser:
+            browsersettings = json.load(json_browser)
+            try:
+                browser = browsersettings['browser']
+            except:
+                browser = ""
+        json_browser.close()
         except:
             browser = ""
-    json_browser.close()
-    except:
-        browser = ""
-if browser == "default":
-    browsermode = "default"
-if browser == "edge":
-    browsermode = "edge"
-if browser == "electron":
-    browsermode = "electron"
-else:
-    browsermode = "edge"
+    if browser == "default":
+        browsermode = "default"
+    if browser == "edge":
+        browsermode = "edge"
+    if browser == "electron":
+        browsermode = "electron"
+    else:
+        browsermode = "edge"
 
 
 
