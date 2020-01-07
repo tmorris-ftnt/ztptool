@@ -292,7 +292,7 @@ def openbook(filename):
                                 if ws.cell(row=row, column=col).value is None:
                                     device_dint_data[newdict['Device_Name']][i[5:]] = ""
                                 else:
-                                    device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                                    device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value).split(",")
                             if i[0:9] == "sdwanint_":
                                 sdwanintsettings = i[9:].split("|")
                                 try:
@@ -808,9 +808,7 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
                                 "vdom": "root"
                             }
                         ],
-                        "local-intf": [
-                            realinterface
-                        ],
+                        "local-intf": realinterface,
                         "intrazone-deny": 0
                     }
 
@@ -819,10 +817,16 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
         "id": requestid,
         "session": fmg_sessionid
     }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_mapdint = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(json_mapdint, indent=4, sort_keys=True))
     status_mapdint = json_mapdint['result'][0]['status']['message']
     return status_mapdint
+
+
 
 
 def add_sdwaninterface_mapping(adomname, devicename, interfacename, vdom):
