@@ -233,94 +233,96 @@ def openbook(filename):
         try:
             ws = wb['Devices']
         except:
-            ws = wb['Sheet1']
-
+            try:
+                ws = wb['Sheet1']
+            except:
+                ws = wb.active
 
 
         print("cell A1 value = " + ws.cell(1,1).value)
 
-        if ws.cell(1,1).value != "Device_Name":
-            error_msg = "Could not find valid worksheet"
+        if ws.cell(1,1).value == "Device_Name":
+            print("ok")
+            ## Get Columns
+            headings = ['nul']
+            col = 0
+            blankheading = 0
+            while blankheading < 3:
+                col += 1
+                if ws.cell(row=1, column=col).value == None:
+                    blankheading += 1
+                else:
+                    headings.append(ws.cell(row=1, column=col).value)
 
+            ## Get all Device Rows
+            AllDevicesList = []
+            device_meta_data = {}
+            device_dint_data = {}
+            device_sdwanint_data = {}
+            device_daddr_data = {}
+            blankrow = 0
+            row = 1
 
-        ## Get Columns
-        headings = ['nul']
-        col = 0
-        blankheading = 0
-        while blankheading < 3:
-            col += 1
-            if ws.cell(row=1, column=col).value == None:
-                blankheading += 1
-            else:
-                headings.append(ws.cell(row=1, column=col).value)
+            while blankrow < 3:
+                row += 1
+                if ws.cell(row=row, column=1).value is None:
+                    blankrow += 1
+                else:
+                    # get device detail in row
 
-        ## Get all Device Rows
-        AllDevicesList = []
-        device_meta_data = {}
-        device_dint_data = {}
-        device_sdwanint_data = {}
-        device_daddr_data = {}
-        blankrow = 0
-        row = 1
-
-        while blankrow < 3:
-            row += 1
-            if ws.cell(row=row, column=1).value is None:
-                blankrow += 1
-            else:
-                # get device detail in row
-
-                col = 1
-                newdict = {}
-                for i in headings:
-                    if i != 'nul':
-                        if ws.cell(row=row, column=col).value is None:
-                            newdict[i] = ""
-                        else:
-                            newdict[i] = str(ws.cell(row=row, column=col).value)
-                        if i == "Device_Name":
-                            device_meta_data[newdict['Device_Name']] = {}
-                            device_dint_data[newdict['Device_Name']] = {}
-                            device_sdwanint_data[newdict['Device_Name']] = {}
-                            device_daddr_data[newdict['Device_Name']] = {}
-                        if i[0:5] == "meta_":
+                    col = 1
+                    newdict = {}
+                    for i in headings:
+                        if i != 'nul':
                             if ws.cell(row=row, column=col).value is None:
-                                device_meta_data[newdict['Device_Name']][i[5:]] = ""
+                                newdict[i] = ""
                             else:
-                                device_meta_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
-                        if i[0:5] == "dint_":
-                            if ws.cell(row=row, column=col).value is None:
-                                device_dint_data[newdict['Device_Name']][i[5:]] = ""
-                            else:
-                                device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
-                        if i[0:9] == "sdwanint_":
-                            sdwanintsettings = i[9:].split("|")
-                            try:
-                                device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]]
-                            except:
-                                device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]] = {}
-                            if ws.cell(row=row, column=col).value is not None:
-                                device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
-                                    sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
+                                newdict[i] = str(ws.cell(row=row, column=col).value)
+                            if i == "Device_Name":
+                                device_meta_data[newdict['Device_Name']] = {}
+                                device_dint_data[newdict['Device_Name']] = {}
+                                device_sdwanint_data[newdict['Device_Name']] = {}
+                                device_daddr_data[newdict['Device_Name']] = {}
+                            if i[0:5] == "meta_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_meta_data[newdict['Device_Name']][i[5:]] = ""
+                                else:
+                                    device_meta_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:5] == "dint_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_dint_data[newdict['Device_Name']][i[5:]] = ""
+                                else:
+                                    device_dint_data[newdict['Device_Name']][i[5:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:9] == "sdwanint_":
+                                sdwanintsettings = i[9:].split("|")
+                                try:
+                                    device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]]
+                                except:
+                                    device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]] = {}
+                                if ws.cell(row=row, column=col).value is not None:
+                                    device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
+                                        sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
 
-                        if i[0:6] == "daddr_":
-                            if ws.cell(row=row, column=col).value is None:
-                                device_daddr_data[newdict['Device_Name']][i[6:]] = ""
-                            else:
-                                device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:6] == "daddr_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_daddr_data[newdict['Device_Name']][i[6:]] = ""
+                                else:
+                                    device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
 
-                        col += 1
+                            col += 1
 
-                AllDevicesList.append(newdict)
+                    AllDevicesList.append(newdict)
+        else:
+            AllDevicesList = "worksheet"
+
     except Exception as e:
-        AllDevicesList = "failed"
+        AllDevicesList = "workbook"
         print(e)
 
     wb = None
-    if error_msg == "":
-        return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
-    else:
-        return "failed"
+
+    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
+
 
 
 def get_workspace():
@@ -1021,8 +1023,11 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = openbook(
         filename)
 
-    if alldevices == "failed":
+    if alldevices == "workbook":
         return_html += "Load Excel workbook failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+    elif alldevices == "worksheet":
+        return_html += "Load Excel worksheet failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+        return_html += "Device_Name not found in cell A1 of worksheet named 'Devices', 'Sheet1', or the active worksheet.<br>\n"
     else:
         return_html += "Load Excel workbook successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
         ##login to FMG
