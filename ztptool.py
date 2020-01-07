@@ -222,11 +222,17 @@ def get_and_add(std_objects, objecturls):
 ### Start copy from draft
 
 def openbook(filename):
+    error_msg = ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
         wb = load_workbook(in_mem_file)
-        ws = wb['Sheet1']
+        ws = wb['Devices']
+        print("cell A1 value = " + ws.cell(1,1).value)
+        if ws.cell(1,1).value != "Device_Name":
+            ws = wb.active
+            if ws.cell(1,1).value != "Device_Name":
+                error_msg = "Could not find valid worksheet"
 
         ## Get Columns
         headings = ['nul']
@@ -301,7 +307,10 @@ def openbook(filename):
         AllDevicesList = "failed"
 
     wb = None
-    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
+    if error_msg == "":
+        return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
+    else
+        return "failed"
 
 
 def get_workspace():
@@ -567,10 +576,17 @@ def assign_cli_template(adom, template, devicename):
         "id": requestid,
         "session": fmg_sessionid
     }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_assignclitemplate = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(json_assignclitemplate, indent=4, sort_keys=True))
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
+
+
+
 
 
 def unassign_cli_template(adom, template, devicename):
@@ -1127,6 +1143,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 if status_clitemp == "OK":
                     if workspacemode == 1:
                         workspace_commit(fmg_adom)
+                        sys.exit()
 
 
                     ##Install Device Settings
@@ -1750,6 +1767,8 @@ def getsettings_devices():
 
 session = requests.session()
 
+
+select_browser = input("Select Browser (1 = Chrome, 2 = Edge, 3 = Firefox): ")
 
 
 try:
