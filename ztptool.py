@@ -277,7 +277,7 @@ def openbook(filename):
                             if ws.cell(row=row, column=col).value is None:
                                 device_dint_data[newdict['Device_Name']][i[5:]] = ""
                             else:
-                                device_dint_data[newdict['Device_Name']][i[5:]] = (str(ws.cell(row=2, column=14).value)).split(",")
+                                device_dint_data[newdict['Device_Name']][i[5:]] = (str(ws.cell(row=row, column=col).value)).split(",")
                         if i[0:9] == "sdwanint_":
                             sdwanintsettings = i[9:].split("|")
                             try:
@@ -774,14 +774,14 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
                 "url": "pm/config/adom/" + adomname + "/obj/dynamic/interface/" + newinterfacename + "/dynamic_mapping",
                 "data":
                     {
-                        "_scope": [
-                            {
-                                "name": devicename,
-                                "vdom": "root"
-                            }
-                        ],
-                        "local-intf": realinterface,
-                        "intrazone-deny": 0
+                    "_scope": [
+                        {
+                            "name": devicename,
+                            "vdom": "root"
+                        }
+                    ],
+                    "local-intf": realinterface,
+                    "intrazone-deny": 0
                     }
 
             }
@@ -789,6 +789,7 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
         "id": requestid,
         "session": fmg_sessionid
     }
+
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_mapdint = json.loads(res.text)
     status_mapdint = json_mapdint['result'][0]['status']['message']
