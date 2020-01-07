@@ -223,16 +223,25 @@ def get_and_add(std_objects, objecturls):
 
 def openbook(filename):
     error_msg = ""
+    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = "", "", "", "", ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
         wb = load_workbook(in_mem_file)
-        ws = wb['Devices']
+
+
+        try:
+            ws = wb['Devices']
+        except:
+            ws = wb['Sheet1']
+
+
+
         print("cell A1 value = " + ws.cell(1,1).value)
+
         if ws.cell(1,1).value != "Device_Name":
-            ws = wb.active
-            if ws.cell(1,1).value != "Device_Name":
-                error_msg = "Could not find valid worksheet"
+            error_msg = "Could not find valid worksheet"
+
 
         ## Get Columns
         headings = ['nul']
@@ -303,13 +312,14 @@ def openbook(filename):
                         col += 1
 
                 AllDevicesList.append(newdict)
-    except:
+    except Exception as e:
         AllDevicesList = "failed"
+        print(e)
 
     wb = None
     if error_msg == "":
         return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
-    else
+    else:
         return "failed"
 
 
@@ -1766,9 +1776,6 @@ def getsettings_devices():
 
 
 session = requests.session()
-
-
-select_browser = input("Select Browser (1 = Chrome, 2 = Edge, 3 = Firefox): ")
 
 
 try:
