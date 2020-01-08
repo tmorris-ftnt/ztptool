@@ -1787,11 +1787,25 @@ def getsettings_devices():
 session = requests.session()
 
 
+use_mode = ''
 try:
-    eel.start('ztptool.html', size=(790, 850), disable_cache=True)
-except EnvironmentError:
-    # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
-    if sys.platform in ['win32', 'win64'] and int(platform.release()) >= 10:
-        eel.start('ztptool.html', size=(790, 850), disable_cache=True, mode='edge')
-    else:
-        raise
+    with open('browser.json') as json_browsersettings:
+        browsersettings = json.load(json_browsersettings)
+        use_mode = browsersettings['mode']
+        use_cmdline_args = browsersettings['cmdline_args']
+except:
+    pass
+
+
+if use_mode == "":
+    try:
+        eel.start('ztptool.html', size=(790, 850), disable_cache=True)
+    except EnvironmentError:
+        # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
+        if sys.platform in ['win32', 'win64'] and int(platform.release()) >= 10:
+            eel.start('ztptool.html', size=(790, 850), disable_cache=True, mode='edge')
+        else:
+            raise
+
+else:
+    eel.start('ztptool.html', size=(790, 850), disable_cache=True, mode=use_mode, cmdline_args=use_cmdline_args)
