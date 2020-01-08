@@ -222,12 +222,11 @@ def get_and_add(std_objects, objecturls):
 ### Start copy from draft
 
 def openbook(filename):
-    error_msg = ""
     headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = "", "", "", "", ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
-        wb = load_workbook(in_mem_file)
+        wb = load_workbook(in_mem_file, data_only=True)
 
 
         try:
@@ -320,7 +319,6 @@ def openbook(filename):
         print(e)
 
     wb = None
-
     return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
 
 
