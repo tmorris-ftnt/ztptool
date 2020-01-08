@@ -1768,11 +1768,12 @@ def getsettings_devices():
           <input type="text" class="form-control" id="fmgadom" value="%s">
         </div>
         <div form-group>
-          <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Select File</button>
-          Excel Path: <span id="filepath">%s</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
+          <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Set File Path</button>
+          Excel Path: <span id="filepath">%s</span> <br/><br/>
         </div>
         <div class="form-group">
           <button type="button" onclick="processxlsx(document.getElementById('filepath').innerHTML)" class="btn btn-primary">Submit</button>
+          <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div>
         </div>
       </form>
 
