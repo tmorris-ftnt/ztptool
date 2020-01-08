@@ -106,8 +106,9 @@
 
 <script>
 var dosya_path = "/";
-async function getFolder() {
-var dosya_path = await eel.btn_getxlsxfile()();
+function getFolder() {
+  dosya_path = document.getElementById("filepath").innerHTML;
+  dosya_path = prompt("Enter Path to Excel", dosya_path);
 	if (dosya_path) {
 		console.log(dosya_path);
         document.getElementById("filepath").innerHTML = dosya_path;
