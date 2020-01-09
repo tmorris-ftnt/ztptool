@@ -1085,7 +1085,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
             return_html += "FortiManager is in workspace mode (not supported on FMG < 6.2.3 as per FMG Bug 0541911) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             #proceed = False
         elif workspacemode == 0:
-            return_html += "FortiManager has workspace mode disabled <span class=\"glyphicon glyphicon-info-sign\" style=\"color:green\"></span><br>\n"
+            return_html += "FortiManager has workspace mode disabled <span class=\"glyphicon glyphicon-info-sign\" style=\"color:blue\"></span><br>\n"
 
         ## Lock ADOM is workspace mode is enabled
 
