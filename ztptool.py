@@ -946,7 +946,7 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
                                 "vdom": vdom
                             }
                         ],
-
+                        "allow-routing": current_int['allow-routing'],
                         "subnet": [
                             str(ipaddress.ip_network(newaddr).network_address),
                             str(ipaddress.ip_network(newaddr).netmask)
@@ -969,7 +969,7 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
                                 "vdom": vdom
                             }
                         ],
-
+                        "allow-routing": current_int['allow-routing'],
                         "end-ip": splitaddr[1].strip(),
                         "start-ip": splitaddr[0].strip()
                     }
