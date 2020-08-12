@@ -728,6 +728,29 @@ def add_install_target(device, adomname, vdomname, pkg):
     status_ppkg = json_assignppkg['result'][0]['status']['message']
     return status_ppkg
 
+def add_device_to_group(device, adomname, vdomname, groupname):
+    requestid = 1
+    jsondata = {
+        "method": "add",
+        "params": [
+            {
+                "url": "dvmdb/adom/" + adomname + "/group/" + groupname + "/object member",
+                "data": [
+                    {
+                        "name": device,
+                        "vdom": vdomname
+                    },
+                ]
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+    json_devgroup = json.loads(res.text)
+    status_devgroup = json_devgroup['result'][0]['status']['message']
+    return status_devgroup
 
 def install_pkg(pkg, adomname, devicename, vdom):
     requestid = 1
@@ -1136,6 +1159,20 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                     'Device_SN'] + ") failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
             if add_dev_status == True:
+                ## Add device to device group
+                if "Device_Group" in devicedata:
+                    if devicedata['Device_Group'] == "" or devicedata['Device_Group'] is None:
+                        return_html += "Assign Device Group {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_devgroup = add_device_to_group(devicedata['Device_Name'], fmg_adom, 'root', devicedata['Device_Group'])
+
+                        if status_devgroup == "OK":
+                            return_html += "Assign Device Group \"" + devicedata[
+                                'Device_Group'] + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Assign Device Group \"" + devicedata[
+                                'Device_Group'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                
                 ## Add meta data to device
                 update_device(fmg_adom, devicedata['Device_Name'])
 
