@@ -1,3 +1,5 @@
+import time
+
 import eel
 from tkinter import filedialog
 from tkinter import *
@@ -222,7 +224,7 @@ def get_and_add(std_objects, objecturls):
 ### Start copy from draft
 
 def openbook(filename):
-    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = "", "", "", "", ""
+    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_vpn_data,  = "", "", "", "", "", ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
@@ -259,6 +261,7 @@ def openbook(filename):
             device_dint_data = {}
             device_sdwanint_data = {}
             device_daddr_data = {}
+            device_vpn_data = {}
             blankrow = 0
             row = 1
 
@@ -282,6 +285,7 @@ def openbook(filename):
                                 device_dint_data[newdict['Device_Name']] = {}
                                 device_sdwanint_data[newdict['Device_Name']] = {}
                                 device_daddr_data[newdict['Device_Name']] = {}
+                                device_vpn_data[newdict['Device_Name']] = {}
                             if i[0:5] == "meta_":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_meta_data[newdict['Device_Name']][i[5:]] = ""
@@ -301,12 +305,17 @@ def openbook(filename):
                                 if ws.cell(row=row, column=col).value is not None:
                                     device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
                                         sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
-
                             if i[0:6] == "daddr_":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = ""
                                 else:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:4] == "vpn_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_vpn_data[newdict['Device_Name']][i[4:]] = ""
+                                else:
+                                    device_vpn_data[newdict['Device_Name']][i[4:]] = str(
+                                        ws.cell(row=row, column=col).value)
 
                             col += 1
 
@@ -319,7 +328,7 @@ def openbook(filename):
         print(e)
 
     wb = None
-    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
+    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_vpn_data
 
 
 
@@ -514,7 +523,7 @@ def add_model_device(adomname, devicename, sn, platform, prefer_img):
                         "flags": 67371040,
                         "sn": sn,
                         "os_ver": 6,
-                        "mr": 2
+                        "mr": 4
                     }
                 }
             }
@@ -1023,6 +1032,152 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
     return result_msg
 
 
+def add_vpn_overlay(adom, overlayname , authpasswd):
+    # Adds a VPN Community to FortiManager
+
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/vpntable",
+                "data": [
+                    {
+                        "name": overlayname,
+                        "description": "Overlay Created by Automation Tool",
+                        "topology": 2,
+                        "psk-auto-generate": "enable",
+                        "ike1keylifesec": 28800,
+                        "ike1dpd": 1,
+                        "ike1natkeepalive": 10,
+                        "ike2keylifesec": 1800,
+                        "ike2keylifekbs": 5120,
+                        "ike2keepalive": 1,
+                        "intf-mode": 0,
+                        "fcc-enforcement": 0,
+                        "ike-version": 2,
+                        "negotiate-timeout": 30,
+                        "inter-vdom": 0,
+                        "auto-zone-policy": 0,
+                        "npu-offload": 1,
+                        "authmethod": 1,
+                        "ike1dhgroup": 12,
+                        "dpd": 3,
+                        "localid-type": 0,
+                        "ike1mode": 1,
+                        "ike1nattraversal": 1,
+                        "ike1proposal": [
+                            "aes128-sha256",
+                            "aes256-sha256"
+                        ],
+                        "ike2autonego": 0,
+                        "ike2dhgroup": 12,
+                        "ike2keylifetype": 1,
+                        "pfs": 1,
+                        "ike2proposal": [
+                            "aes128-sha256",
+                            "aes256-sha256"
+                        ],
+                        "replay": 1
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("-- add_vpn_overlay --")
+    json_add_vpn_overlay = json.loads(res.text)
+    status_add_vpn_overlay = json_add_vpn_overlay['result'][0]['status']['message']
+    return status_add_vpn_overlay
+
+
+def add_vpn_node(adom, overlayname, interface , authpasswd, devicename, vdom):
+    #Adds a node to an Existing VPN community in FortiManager
+
+    # Check Overlay Exists/Check Community Exists?
+    # @Darryl
+    # Enhancement - Update Exiting Overlay\Node ID number, otherwise use a new ID.
+    # Note - this currently uses ID 0 - which means next available ID number - if this imports twice you will get two entries
+
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/node",
+                "data": [
+                    {
+                         "protected_subnet": [
+                            {
+                                "addr": [
+                                    "all"
+                                ]
+                            }
+                        ],
+                        "id": 0,
+                        "vpntable": [
+                            overlayname
+                        ],
+                        "role": 1,
+                        "usrgrp": [],
+                        "iface": [
+                            interface
+                        ],
+                        "hub_iface": [],
+                        "peer": [],
+                        "automatic_routing": 0,
+                        "route-overlap": 0,
+                        "vpn-zone": [],
+                        "spoke-zone": [],
+                        "vpn-interface-priority": 0,
+                        "auto-configuration": 1,
+                        "default-gateway": "0.0.0.0",
+                        "dns-service": 5,
+                        "dhcp-server": 1,
+                        "ipsec-lease-hold": 60,
+                        "add-route": 0,
+                        "assign-ip": 0,
+                        "assign-ip-from": 0,
+                        "dns-mode": 1,
+                        "exchange-interface-ip": 0,
+                        "mode-cfg": 0,
+                        "mode-cfg-ip-version": 0,
+                        "net-device": 0,
+                        "peertype": 8,
+                        "tunnel-search": 1,
+                        "unity-support": 1,
+                        "xauthtype": 1,
+                        "scope member": [
+                            {
+                                "name": devicename,
+                                "vdom": vdom
+                            }
+                        ]
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("-- add_vpn_node --")
+    json_addvpnnode = json.loads(res.text)
+    status_addvpnnode = json_addvpnnode['result'][0]['status']['message']
+    return status_addvpnnode
+
+
+##====================================================================================
+##====================================================================================
+##====================================================================================
+##====================================================================================
+##====================================================================================
+
+
 @eel.expose
 def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     global fmg_user
@@ -1033,6 +1188,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     global device_meta_data
     global device_dint_data
     global device_sdwanint_data
+    global device_vpn_data
     global alldevices
 
     qi_status = False
@@ -1045,7 +1201,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     return_html = ""
     sendupdate(return_html)
 
-    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = openbook(
+    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_vpn_data  = openbook(
         filename)
 
     if alldevices == "workbook":
@@ -1130,14 +1286,13 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
     ### Check for Meta Fields and Create if they dont exist
     if proceed == True:
-
         metafields = get_meta()
         for field in headings:
             if field[0:5] == "meta_":
                 try:
                     IPDICT = next(item for item in metafields if item["name"] == field[5:])
                 except:
-                    create_meta(field[5:])
+                    result = create_meta(field[5:])
 
     ### Create Model Devices
     if proceed == True:
@@ -1174,6 +1329,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                                 'Device_Group'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                 
                 ## Add meta data to device
+                print("## Add meta data to device")
                 update_device(fmg_adom, devicedata['Device_Name'])
 
 
@@ -1248,6 +1404,24 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += "Add dynamic map for address \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                         else:
                             return_html += "Add dynamic map for address \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdaddr + "<br>\n"
+
+                ### Add Branch to Central VPN Manager (Darryl)
+
+                for key in device_vpn_data[devicedata['Device_Name']]:
+                    if device_vpn_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add vpn node for device \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        # key = the overlay name
+                        add_vpn_overlay(fmg_adom, key, "!123fortinet123!")
+                        # device_vpn_data
+                        status_mapvpnnode = add_vpn_node(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
+                                                         "!123fortinet123!",
+                                                    devicedata['Device_Name'], 'root')
+                        if status_mapvpnnode == "OK":
+                            return_html += "Add vpnnode map for device \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add vpnnode map for device \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                             return_html += status_mapdaddr + "<br>\n"
 
                 ### MAP SDWAN Interfaces

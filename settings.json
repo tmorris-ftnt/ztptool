@@ -1,7 +1,7 @@
 {
-  "fmg": "",
+  "fmg": "172.16.4.64",
   "user": "admin",
   "passwd": "",
-  "adom": "root",
-  "path": "/"
+  "adom": "AKL-SDWAN",
+  "path": "C:/Users/darry/OneDrive/Desktop/FortiZTP 1.0.11/example/vpn_example.xlsx"
 }
