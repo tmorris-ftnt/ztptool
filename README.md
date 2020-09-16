@@ -118,7 +118,7 @@ This will assign the SDWAN_Template to the Device
 > Leave blank to skip assigning SD-WAN Template
 
 #### Policy_Package
-This will assign the Policy Packet to the Device. 
+This will assign the Policy Package to the Device. 
 
 ### Optional/Dynamic Fields
 The following fields have are optional and have a prefix, a value, and in some cases a suffix. They're used to define meta fields and per device mappings.
@@ -149,6 +149,8 @@ Device_Name | ... | dint_LAN
 FGT-Branch1 | ... | port1
 
 This configuration will create a per device object for the dynamic interface "LAN" with the value port1 for device FGT-Branch1.
+
+Multiple interfaces can be provided in a comma seperated list. 
 
 #### daddr_value
 The daddr_ prefix will create a per device mapping to an address object. 
