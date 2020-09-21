@@ -1,6 +1,7 @@
 import eel
 from tkinter import filedialog
 from tkinter import *
+from tkinter import *
 from openpyxl import load_workbook
 import json, requests, ipaddress, sys, platform, io
 
@@ -279,9 +280,12 @@ def openbook(filename):
                                 newdict[i] = str(ws.cell(row=row, column=col).value)
                             if i == "Device_Name":
                                 device_meta_data[newdict['Device_Name']] = {}
+                                device_meta_data[newdict['Device_Name']]['Device_Name'] = newdict['Device_Name']
                                 device_dint_data[newdict['Device_Name']] = {}
                                 device_sdwanint_data[newdict['Device_Name']] = {}
                                 device_daddr_data[newdict['Device_Name']] = {}
+                            if i == "Device_SN":
+                                device_meta_data[newdict['Device_Name']]['Device_SN'] = newdict['Device_SN']
                             if i[0:5] == "meta_":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_meta_data[newdict['Device_Name']][i[5:]] = ""
@@ -547,6 +551,51 @@ def update_device(adom, devicename):
     res = session.post(fmgurl, json=jsondata, verify=False)
 
 
+def add_device_coords(devicename, adom, long, lat):
+    requestid = 1
+    jsondata = {
+        "method": "update",
+        "params": [
+            {
+                "url": "/dvmdb/adom/" + adom + "/device/" + devicename,
+                "data": {
+                    "longitude": long,
+                    "latitude": lat
+                }
+
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+    json_devcoords = json.loads(res.text)
+    status_devcoords = json_devcoords['result'][0]['status']['message']
+    return status_devcoords
+
+def change_admpass(devicename, adom, newpass):
+    requestid = 1
+    jsondata = {
+        "method": "update",
+        "params": [
+            {
+                "url": "/dvmdb/adom/" + adom + "/device/" + devicename,
+                "data": {
+                    "adm_pass": newpass
+                }
+
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+    json_admpw = json.loads(res.text)
+    status_admpw = json_admpw['result'][0]['status']['message']
+    return status_admpw
+
 def assign_cli_template(adom, template, devicename):
     ## template or template group
     template_string = "template"
@@ -751,6 +800,8 @@ def add_device_to_group(device, adomname, vdomname, groupname):
     json_devgroup = json.loads(res.text)
     status_devgroup = json_devgroup['result'][0]['status']['message']
     return status_devgroup
+
+
 
 def install_pkg(pkg, adomname, devicename, vdom):
     requestid = 1
@@ -1139,6 +1190,17 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 except:
                     create_meta(field[5:])
 
+        ## check for automatic Meta field for Device_Name and Device_SN
+        try:
+            IPDICT = next(item for item in metafields if item["name"] == "Device_Name")
+        except:
+            create_meta("Device_Name")
+        try:
+            IPDICT = next(item for item in metafields if item["name"] == "Device_SN")
+        except:
+            create_meta("Device_SN")
+
+
     ### Create Model Devices
     if proceed == True:
         sendupdate(return_html)
@@ -1172,7 +1234,33 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         else:
                             return_html += "Assign Device Group \"" + devicedata[
                                 'Device_Group'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
-                
+
+                ## Add coordinates to device
+                if "Device_Longitute" in devicedata and "Device_Latitute" in devicedata:
+                    if devicedata['Device_Longitute'] == "" or devicedata['Device_Longitute'] is None or devicedata['Device_Latitute'] == "" or devicedata['Device_Latitute'] is None:
+                        return_html += "Assign Device Coordinates {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_addcoords = add_device_coords(devicedata['Device_Name'], fmg_adom, devicedata['Device_Longitute'], devicedata['Device_Latitute'])
+
+                        if status_addcoords == "OK":
+                            return_html += "Assign Device Coordinates successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Assign Device Coordinates failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
+                ## Change device password for admin user if Device_Adminpassword exists in excel sheet
+                if "Device_Adminpassword" in devicedata:
+                    if devicedata['Device_Adminpassword'] == "" or devicedata['Device_Adminpassword'] is None:
+                        return_html += "Change Device Admin Password {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_changeadmpass = change_admpass(devicedata['Device_Name'], fmg_adom, devicedata['Device_Adminpassword'])
+
+                        if status_changeadmpass == "OK":
+                            return_html += "Change Device Admin Password successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Change Device Admin Password failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
+
+
                 ## Add meta data to device
                 update_device(fmg_adom, devicedata['Device_Name'])
 
@@ -1569,15 +1657,15 @@ def btn_getjsonfile():
 
 
 @eel.expose
-def savesettings(save_fmg,save_user,save_adom,save_path):
+def savesettings(save_fmg,save_user,save_adom,save_path,save_pw):
     settingsfiledata = '''{
   "fmg": "%s",
   "user": "%s",
-  "passwd": "",
+  "passwd": "%s",
   "adom": "%s",
   "path": "%s"
 }
-''' % (save_fmg, save_user, save_adom, save_path)
+''' % (save_fmg, save_user, save_pw, save_adom, save_path)
 
     try:
         setting_file = open("settings.json", "wt")
@@ -1806,7 +1894,8 @@ def getsettings_devices():
         </div>
         <div form-group>
           <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Select File</button>
-          Excel Path: <span id="filepath">%s</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
+          Excel Path: <span id="filepath">%s</span> <div class="float-right">
+          <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#savesettingsModal">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
         </div>
         <div class="form-group">
           <button type="button" onclick="processxlsx(document.getElementById('filepath').innerHTML)" class="btn btn-primary">Submit</button>
