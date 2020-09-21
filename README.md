@@ -32,6 +32,9 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
   * [Import ADOM](#import-adom)
 
 ## Getting Started with demo_example
+
+> Included examples only works for FortiManager 6.2.1 and 6.2.2
+
 Extact the files from the .zip archive somewhere on your computer.
 Note: Chrome must be installed the computer.
 
