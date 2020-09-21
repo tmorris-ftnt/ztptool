@@ -22,7 +22,12 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
       - [Post_CLI_Template](#post_cli_template)
       - [SDWAN_Template](#sdwan_template)
       - [Policy_Package](#policy_package)
-    + [Optional/Dynamic Fields](#optionaldynamic-fields)
+    + [Optional Device Fields](#optional-device-fields)  
+      - [Device_Adminpassword](#device_adminpassword)
+      - [Device_Group](#device_group)
+      - [Device_Longitute](#device_longitute)
+      - [Device_Latitute](#device_latitute)
+    + [Dynamic Fields](#dynamic-fields)
       - [meta_value](#meta_value)
       - [dint_value](#dint_value)
       - [daddr_value](#daddr_value)
@@ -30,6 +35,7 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
   * [Settings](#settings)
   * [Export ADOM](#export-adom)
   * [Import ADOM](#import-adom)
+  * [MacOS and Linux Support](#macos_and_linux_support)
 
 ## Getting Started with demo_example
 
@@ -40,7 +46,7 @@ Note: Chrome must be installed the computer.
 
 Create an user on FortiManager version 6.2.1+ with `<rpc-permit read-write>` permissions set with ADOM mode enabled. 
 
-Open ztptool.exe (Windows) or ztptool.app (MacOS).
+Open ztptool.exe.
 
 Goto the Import ADOM page and fill in the form and select the demo_example.json file.
 
@@ -250,4 +256,10 @@ The following settings will be exported using this function
 
 ## Import ADOM
 The Import ADOM function will create a new import based on of a json file created by the Export ADOM function. 
+
+## MacOS and Linux Support
+Builds are no longer provided for MacOS due to issues with PyInstaller and permissions in MacOS. 
+
+To run on MacOS and Linux please run directly in python form source. 
+
 
