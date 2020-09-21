@@ -84,6 +84,7 @@ the following fields have specific meaning in ZTP Tool and are required in order
 #### Device_Name
 This field will indicate the devicename to assign in FortiManager
 
+> This field will also be copied to a meta field called "Device_Name"
 
 #### Platform
 This field will assign the Platform (i.e. FortiGate-60E). 
@@ -92,6 +93,8 @@ Use the CLI command `diagnose dvm supported-platforms list` on FortiManager to g
 
 #### Device_SN
 This field will assign the serial number for the device.
+
+> This field will also be copied to a meta field called "Device_SN"
 
 #### Upgrade_Ver
 This field will specify the Firmware version to upgrade to when the device connects to FortiManager. 
