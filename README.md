@@ -123,7 +123,21 @@ This will assign the SDWAN_Template to the Device
 #### Policy_Package
 This will assign the Policy Package to the Device. 
 
-### Optional/Dynamic Fields
+### Optional Device Fields
+
+#### Device_Adminpassword
+This will set the password for the admin user on the device, this field needs to match what is on the FortiGate device when it first connects to FortiManager. Default is "" (no password)
+
+#### Device_Group
+This will set the group in FortiManager for the device. The group must already exist in FortiManager.
+
+#### Device_Longitute
+This will set the longitute value for the device which is used to show the device on a map.  
+
+#### Device_Latitute
+This will set the latitute value for the device which is used to show the device on a map.  
+
+### Dynamic Fields
 The following fields have are optional and have a prefix, a value, and in some cases a suffix. They're used to define meta fields and per device mappings.
 
 #### meta_value
@@ -198,8 +212,6 @@ adom | FortiManager ADOM
 path | Path to Excel file
 
 You can also use the save settings option on the Import Devices page to save the current settings to the file.
-
-> The `passwd` field will not be populated if you use this option.
 
 Example
 `{
