@@ -223,7 +223,7 @@ def get_and_add(std_objects, objecturls):
 ### Start copy from draft
 
 def openbook(filename):
-    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = "", "", "", "", ""
+    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data = "", "", "", "", "", ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
@@ -260,6 +260,7 @@ def openbook(filename):
             device_dint_data = {}
             device_sdwanint_data = {}
             device_daddr_data = {}
+            device_daddr6_data = {}
             blankrow = 0
             row = 1
 
@@ -284,6 +285,7 @@ def openbook(filename):
                                 device_dint_data[newdict['Device_Name']] = {}
                                 device_sdwanint_data[newdict['Device_Name']] = {}
                                 device_daddr_data[newdict['Device_Name']] = {}
+                                device_daddr6_data[newdict['Device_Name']] = {}
                             if i == "Device_SN":
                                 device_meta_data[newdict['Device_Name']]['Device_SN'] = newdict['Device_SN']
                             if i[0:5] == "meta_":
@@ -311,6 +313,11 @@ def openbook(filename):
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = ""
                                 else:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:7] == "daddr6_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_daddr6_data[newdict['Device_Name']][i[7:]] = ""
+                                else:
+                                    device_daddr6_data[newdict['Device_Name']][i[7:]] = str(ws.cell(row=row, column=col).value)
 
                             col += 1
 
@@ -323,7 +330,7 @@ def openbook(filename):
         print(e)
 
     wb = None
-    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data
+    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data
 
 
 
@@ -1074,6 +1081,89 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
     return result_msg
 
 
+def add_daddr6(adomname, daddrobj, newaddr, devicename, vdom):
+    requestid = 1
+    jsondata = {
+        "method": "get",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adomname + "/obj/firewall/address6/" + daddrobj
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+
+    current_int_result = json.loads(res.text)
+    if current_int_result['result'][0]['status']['message'] == "OK":
+        current_int = current_int_result['result'][0]['data']
+
+
+        result_msg = "unknown error"
+
+        submit = False
+
+        if current_int['type'] == 0:
+            try:
+                addrsettings = [
+                    {
+                        "_scope": [
+                            {
+                                "name": devicename,
+                                "vdom": vdom
+                            }
+                        ],
+                        "ip6": newaddr
+                    }
+                ]
+                submit = True
+            except:
+                result_msg = "WARNING: Could not decode ip address into network_address/netmask"
+        elif current_int['type'] == 1:
+            try:
+                newaddr.strip(" ")
+                splitaddr = newaddr.split("-")
+
+                addrsettings = [
+                    {
+                        "_scope": [
+                            {
+                                "name": devicename,
+                                "vdom": vdom
+                            }
+                        ],
+                        "end-ip": splitaddr[1].strip(),
+                        "start-ip": splitaddr[0].strip()
+                    }
+                ]
+                submit = True
+            except:
+                result_msg = "WARNING: Could not calculate IP RANGE"
+
+        if submit is True:
+            requestid = 1
+            jsondata = {
+                "method": "add",
+                "params": [
+                    {
+                        "url": "pm/config/adom/" + adomname + "/obj/firewall/address6/" + daddrobj + "/dynamic_mapping",
+                        "data": addrsettings
+                    }
+                ],
+                "id": requestid,
+                "session": fmg_sessionid
+            }
+            res = session.post(fmgurl, json=jsondata, verify=False)
+            print(res.text)
+            json_result = json.loads(res.text)
+            result_msg = json_result['result'][0]['status']['message']
+    else:
+        result_msg = current_int_result['result'][0]['status']['message']
+    return result_msg
+
+
 @eel.expose
 def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     global fmg_user
@@ -1096,7 +1186,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     return_html = ""
     sendupdate(return_html)
 
-    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data = openbook(
+    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data = openbook(
         filename)
 
     if alldevices == "workbook":
@@ -1325,7 +1415,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += status_mapdint + "<br>\n"
 
                 ### MAP DYNAMIC ADDRESS OJBECTS
-
+                ## ipv4
                 for key in device_daddr_data[devicedata['Device_Name']]:
                     if device_daddr_data[devicedata['Device_Name']][key] == "":
                         return_html += "Add dynamic map for address \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
@@ -1337,6 +1427,19 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         else:
                             return_html += "Add dynamic map for address \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                             return_html += status_mapdaddr + "<br>\n"
+
+                ## ipv6
+                for key in device_daddr6_data[devicedata['Device_Name']]:
+                    if device_daddr6_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add dynamic map for address6 \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_mapdaddr6 = add_daddr6(fmg_adom, key, device_daddr6_data[devicedata['Device_Name']][key],
+                                                    devicedata['Device_Name'], 'root')
+                        if status_mapdaddr6 == "OK":
+                            return_html += "Add dynamic map for address6 \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add dynamic map for address6 \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdaddr6 + "<br>\n"
 
                 ### MAP SDWAN Interfaces
                 for key in device_sdwanint_data[devicedata['Device_Name']]:
