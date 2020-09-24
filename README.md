@@ -31,6 +31,7 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
       - [meta_value](#meta_value)
       - [dint_value](#dint_value)
       - [daddr_value](#daddr_value)
+      - [daddr6_value](#daddr6_value)
       - [sdwanint_value|suffix](#sdwanint_valuesuffix)
   * [Settings](#settings)
   * [Export ADOM](#export-adom)
@@ -179,7 +180,7 @@ This configuration will create a per device object for the dynamic interface "LA
 Multiple interfaces can be provided in a comma seperated list. 
 
 #### daddr_value
-The daddr_ prefix will create a per device mapping to an address object. 
+The daddr_ prefix will create a per device mapping to an IPv4 address object. 
 
 Supports following format 
 
@@ -196,6 +197,23 @@ Device_Name | ... | daddr_Local_LAN | daddr_BranchPhones
 FGT-Branch1 | ... | 192.168.1.0/24 | 192.168.1.50 - 192.168.1.65
 
 This configuration will create a per device object for the dynamic address "Local_LAN" with the type subnet and value of 192.168.1.0/24 and "BranchPhones" with the type range and value of 192.168.1.50 - 192.168.1.65 for device FGT-Branch1
+
+#### daddr6_value
+The daddr6_ prefix will create a per device mapping to an IPv6 address object. 
+
+Supports following format 
+
+Subnet: 2000::/24
+
+Range: 2000::1 - 2000::4
+
+Example Excel Sheet
+
+Device_Name | ... | daddr6_Local_LAN | daddr_6BranchPhones
+----------- | --- | ------------- | --
+FGT-Branch1 | ... | 2000::/24 | 2000::1 - 2000::4
+
+This configuration will create a per device object for the dynamic address "Local_LAN" with the type subnet and value of 2000::/24 and "BranchPhones" with the type range and value of 2000::1 - 2000::4 for device FGT-Branch1
 
 
 #### sdwanint_value|suffix
