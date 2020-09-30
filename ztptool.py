@@ -310,7 +310,7 @@ def openbook(filename):
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = ""
                                 else:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
-                            if i[0:4] == "vpn_":
+                            if i[0:6] == "vpn_OL":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_vpn_data[newdict['Device_Name']][i[4:]] = ""
                                 else:
@@ -1034,7 +1034,7 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
 
 def add_vpn_overlay(adom, overlayname , authpasswd):
     # Adds a VPN Community to FortiManager
-
+    # @darryl
     requestid = 1
     jsondata = {
         "method": "set",
@@ -1044,7 +1044,7 @@ def add_vpn_overlay(adom, overlayname , authpasswd):
                 "data": [
                     {
                         "name": overlayname,
-                        "description": "Overlay Created by Automation Tool",
+                        "description": "Overlay Created by ZTP Tool",
                         "topology": 2,
                         "psk-auto-generate": "enable",
                         "ike1keylifesec": 28800,
@@ -1055,7 +1055,7 @@ def add_vpn_overlay(adom, overlayname , authpasswd):
                         "ike2keepalive": 1,
                         "intf-mode": 0,
                         "fcc-enforcement": 0,
-                        "ike-version": 2,
+                        "ike-version": 1,
                         "negotiate-timeout": 30,
                         "inter-vdom": 0,
                         "auto-zone-policy": 0,
@@ -1093,13 +1093,12 @@ def add_vpn_overlay(adom, overlayname , authpasswd):
     status_add_vpn_overlay = json_add_vpn_overlay['result'][0]['status']['message']
     return status_add_vpn_overlay
 
+def add_vpn_hub(adom, overlayname, interface , authpasswd, devicename, vdom):
+    #Adds a hub to an Existing VPN community in FortiManager
 
-def add_vpn_node(adom, overlayname, interface , authpasswd, devicename, vdom):
-    #Adds a node to an Existing VPN community in FortiManager
-
-    # Check Overlay Exists/Check Community Exists?
+    # need to add Check Overlay Exists/Check Community Exists?
     # @Darryl
-    # Enhancement - Update Exiting Overlay\Node ID number, otherwise use a new ID.
+    # Enhancement - Need to update Exiting Overlay\Node ID number, otherwise use a new ID.
     # Note - this currently uses ID 0 - which means next available ID number - if this imports twice you will get two entries
 
     requestid = 1
@@ -1110,52 +1109,116 @@ def add_vpn_node(adom, overlayname, interface , authpasswd, devicename, vdom):
                 "url": "pm/config/adom/" + adom + "/obj/vpnmgr/node",
                 "data": [
                     {
-                         "protected_subnet": [
-                            {
-                                "addr": [
-                                    "all"
-                                ]
-                            }
-                        ],
                         "id": 0,
-                        "vpntable": [
-                            overlayname
-                        ],
-                        "role": 1,
-                        "usrgrp": [],
-                        "iface": [
-                            interface
-                        ],
+                        "protected_subnet": {
+                            "addr": "all",
+                            "seq": 1
+                        },
+                        "scope member": {
+                            "name": devicename,
+                            "vdom": "root"
+                        },
+                        "vpntable": overlayname,
+                        "role": 0,
+                        "iface": interface,
                         "hub_iface": [],
                         "peer": [],
                         "automatic_routing": 0,
+                        #"mode-cfg": 1,
+                        #"mode-cfg-ip-version": 0,
+                        #"ipv4-start-ip": "10.200.11.1",
+                        #"ipv4-end-ip": "10.200.11.9",
+                        #"ipv4-netmask": "255.255.255.0",
+                        "net-device": 0,
+                        "tunnel-search": 1,
+                        "extgwip": [],
+                        "extgw_hubip": [],
+                        "extgw_p2_per_net": 0,
                         "route-overlap": 0,
                         "vpn-zone": [],
                         "spoke-zone": [],
                         "vpn-interface-priority": 0,
                         "auto-configuration": 1,
-                        "default-gateway": "0.0.0.0",
                         "dns-service": 5,
-                        "dhcp-server": 1,
+                        #"dhcp-server": 1,
+                        "ipsec-lease-hold": 60,
+                        "add-route": 0,
+                        "assign-ip": 1,
+                        "assign-ip-from": 0,
+                        "authusrgrp": [],
+                        "dns-mode": 1,
+                        "exchange-interface-ip": 1,
+                        #"exchange-interface-ip": 0,
+                        "peergrp": [],
+                        "peertype": 1,
+                        "unity-support": 1,
+                        "xauthtype": 1
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("-- add_vpn_hub --")
+    json_addvpnhub = json.loads(res.text)
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    status_addvpnhub = json_addvpnhub['result'][0]['status']['message']
+    return status_addvpnhub
+
+
+def add_vpn_node(adom, overlayname, interface , authpasswd, devicename, vdom):
+    #Adds a node to an Existing VPN community in FortiManager
+
+    # need to add Check Overlay Exists/Check Community Exists?
+    # @Darryl
+    # Enhancement - Need to update Exiting Overlay\Node ID number, otherwise use a new ID.
+    # Note - this currently uses ID 0 - which means next available ID number - if this imports twice you will get two entries
+
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/node",
+                "data": [
+                    {
+                        "protected_subnet": {
+                            "addr": "all",
+                            "seq": 1
+                        },
+                        "scope member": {
+                            "name": devicename,
+                            "vdom": "root"
+                        },
+                        "vpntable": overlayname,
+                        "role": 1,
+                        "usrgrp": [],
+                        "iface": interface,
+                        "automatic_routing": 0,
+                        "extgwip": [],
+                        "extgw_hubip": [],
+                        "extgw_p2_per_net": 0,
+                        "route-overlap": 0,
+                        "vpn-zone": [],
+                        "spoke-zone": [],
+                        "vpn-interface-priority": 0,
+                        "auto-configuration": 1,
                         "ipsec-lease-hold": 60,
                         "add-route": 0,
                         "assign-ip": 0,
                         "assign-ip-from": 0,
-                        "dns-mode": 1,
-                        "exchange-interface-ip": 0,
+                        "exchange-interface-ip": 1,
                         "mode-cfg": 0,
                         "mode-cfg-ip-version": 0,
-                        "net-device": 0,
+                        "net-device": 1,
+                        "peergrp": [],
                         "peertype": 8,
-                        "tunnel-search": 1,
+                        "tunnel-search": 0,
                         "unity-support": 1,
-                        "xauthtype": 1,
-                        "scope member": [
-                            {
-                                "name": devicename,
-                                "vdom": vdom
-                            }
-                        ]
+                        "xauthtype": 1
                     }
                 ]
             }
@@ -1167,6 +1230,7 @@ def add_vpn_node(adom, overlayname, interface , authpasswd, devicename, vdom):
     res = session.post(fmgurl, json=jsondata, verify=False)
     print("-- add_vpn_node --")
     json_addvpnnode = json.loads(res.text)
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
     status_addvpnnode = json_addvpnnode['result'][0]['status']['message']
     return status_addvpnnode
 
@@ -1408,16 +1472,21 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
                 ### Add Branch to Central VPN Manager (Darryl)
 
-                for key in device_vpn_data[devicedata['Device_Name']]:
+                for key in device_vpn_data[devicedata['Device_Name']]:   ## e.g. key = vpn_OL_INET, vpn_OL_MPLS, ishub
                     if device_vpn_data[devicedata['Device_Name']][key] == "":
                         return_html += "Add vpn node for device \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
                     else:
                         # key = the overlay name
-                        add_vpn_overlay(fmg_adom, key, "!123fortinet123!")
-                        # device_vpn_data
-                        status_mapvpnnode = add_vpn_node(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
-                                                         "!123fortinet123!",
-                                                    devicedata['Device_Name'], 'root')
+                        add_vpn_overlay(fmg_adom, key, "")
+
+                        print("Is this device a vpn hub: " + devicedata['vpn_IsHub'])
+                        if devicedata['vpn_IsHub'] in ["true","yes","hub","1"]:
+                            status_mapvpnnode = add_vpn_hub(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
+                                                         "", devicedata['Device_Name'], fmg_adom)
+                        else:
+                            status_mapvpnnode = add_vpn_node(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
+                                                         "", devicedata['Device_Name'], fmg_adom)
+
                         if status_mapvpnnode == "OK":
                             return_html += "Add vpnnode map for device \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                         else:
