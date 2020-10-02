@@ -48,12 +48,13 @@
         </button>
       </div>
       <div class="modal-body">
-        <p>ZTP Tool v1.0.11-alpha</p>
+        <p>ZTP Tool v1.0.13-alpha</p>
         <p>Supports:<ul>
         <li>FortiManager 6.2.1</li>
         <li>FortiManager 6.2.2</li>
         <li>FortiManager 6.2.3</li>
-        <li>Future versions of FortiManager 6.2 should also work. FortiManager 6.4 has not been tested.</li>
+        <li>FortiManager 6.2.5</li>
+        <li>Future versions of FortiManager 6.2 should also work. FortiManager 6.4 has had limited testing and no issues have been found.</li>
       </ul></p>
         <p>ZTP Tool is created by Tim Morris.</p>
         <p>Please report any issues at <a href="https://github.com/tmorris-ftnt/ztptool/issues">https://github.com/tmorris-ftnt/ztptool/issues</a>.</p>
@@ -65,6 +66,33 @@
   </div>
 </div>
 
+
+<div class="modal fade" id="savesettingsModal" tabindex="-1" role="dialog" aria-labelledby="savesettingsModal" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Save Settings</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Warning: Saved passwords will be stored on your computer in plain text.</p>
+        <div class="form-check">
+  <input class="form-check-input" type="checkbox" value="" id="savepassword">
+  <label class="form-check-label" for="savepassword">
+    Save Password?
+  </label>
+</div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        <button type="button" onclick="savesettings()" data-dismiss="modal" class="btn btn-primary">Save Settings</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <body>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
@@ -145,8 +173,18 @@ function processexportadom() {
 }
 
 async function savesettings() {
-  let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value,document.getElementById('filepath').innerHTML)()
-  bsalert(savesettingsmsg[0], savesettingsmsg[1])
+
+
+  if (document.getElementById("savepassword").checked == true) {
+    let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value,document.getElementById('filepath').innerHTML,document.getElementById('fmgpassword').value)()
+    bsalert(savesettingsmsg[0], savesettingsmsg[1])
+  } else {
+    let savesettingsmsg = await eel.savesettings(document.getElementById('fmgip').value,document.getElementById('fmgusername').value,document.getElementById('fmgadom').value,document.getElementById('filepath').innerHTML,"")()
+    bsalert(savesettingsmsg[0], savesettingsmsg[1])
+  }
+
+
+
 }
 
 function bsalert(msg,role) {

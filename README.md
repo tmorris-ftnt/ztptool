@@ -10,34 +10,44 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
 <p align="center"><img src="example/screenshot.png" ></p>
 
 - [ZTP Tool](#ztp-tool)
-  * [Getting Started with demo_example](#getting-started-with-demo-example)
+  * [Getting Started with demo_example](#getting-started-with-demo_example)
   * [ZTP Tool workflow](#ztp-tool-workflow)
   * [Excel File Format](#excel-file-format)
     + [Required Fields](#required-fields)
-      - [Device_Name](#device-name)
+      - [Device_Name](#device_name)
       - [Platform](#platform)
-      - [Device_SN](#device-sn)
-      - [Upgrade_Ver](#upgrade-ver)
-      - [CLI_Template](#cli-template)
-      - [Post_CLI_Template](#post-cli-template)
-      - [SDWAN_Template](#sdwan-template)
-      - [Policy_Package](#policy-package)
-    + [Optional/Dynamic Fields](#optional-dynamic-fields)
-      - [meta_value](#meta-value)
-      - [dint_value](#dint-value)
-      - [daddr_value](#daddr-value)
-      - [sdwanint_value|suffix](#sdwanint-value-suffix)
+      - [Device_SN](#device_sn)
+      - [Upgrade_Ver](#upgrade_ver)
+      - [CLI_Template](#cli_template)
+      - [Post_CLI_Template](#post_cli_template)
+      - [SDWAN_Template](#sdwan_template)
+      - [Policy_Package](#policy_package)
+    + [Optional Device Fields](#optional-device-fields)  
+      - [Device_Adminpassword](#device_adminpassword)
+      - [Device_Group](#device_group)
+      - [Device_Longitute](#device_longitute)
+      - [Device_Latitute](#device_latitute)
+    + [Dynamic Fields](#dynamic-fields)
+      - [meta_value](#meta_value)
+      - [dint_value](#dint_value)
+      - [daddr_value](#daddr_value)
+      - [daddr6_value](#daddr6_value)
+      - [sdwanint_value|suffix](#sdwanint_valuesuffix)
   * [Settings](#settings)
   * [Export ADOM](#export-adom)
   * [Import ADOM](#import-adom)
+  * [MacOS and Linux Support](#macos_and_linux_support)
 
 ## Getting Started with demo_example
+
+> Included examples only works for FortiManager 6.2.1 and 6.2.2
+
 Extact the files from the .zip archive somewhere on your computer.
 Note: Chrome must be installed the computer.
 
 Create an user on FortiManager version 6.2.1+ with `<rpc-permit read-write>` permissions set with ADOM mode enabled. 
 
-Open ztptool.exe (Windows) or ztptool.app (MacOS).
+Open ztptool.exe.
 
 Goto the Import ADOM page and fill in the form and select the demo_example.json file.
 
@@ -84,6 +94,7 @@ the following fields have specific meaning in ZTP Tool and are required in order
 #### Device_Name
 This field will indicate the devicename to assign in FortiManager
 
+> This field will also be copied to a meta field called "Device_Name"
 
 #### Platform
 This field will assign the Platform (i.e. FortiGate-60E). 
@@ -92,6 +103,8 @@ Use the CLI command `diagnose dvm supported-platforms list` on FortiManager to g
 
 #### Device_SN
 This field will assign the serial number for the device.
+
+> This field will also be copied to a meta field called "Device_SN"
 
 #### Upgrade_Ver
 This field will specify the Firmware version to upgrade to when the device connects to FortiManager. 
@@ -118,9 +131,23 @@ This will assign the SDWAN_Template to the Device
 > Leave blank to skip assigning SD-WAN Template
 
 #### Policy_Package
-This will assign the Policy Packet to the Device. 
+This will assign the Policy Package to the Device. 
 
-### Optional/Dynamic Fields
+### Optional Device Fields
+
+#### Device_Adminpassword
+This will set the password for the admin user on the device, this field needs to match what is on the FortiGate device when it first connects to FortiManager. Default is "" (no password)
+
+#### Device_Group
+This will set the group in FortiManager for the device. The group must already exist in FortiManager.
+
+#### Device_Longitute
+This will set the longitute value for the device which is used to show the device on a map.  
+
+#### Device_Latitute
+This will set the latitute value for the device which is used to show the device on a map.  
+
+### Dynamic Fields
 The following fields have are optional and have a prefix, a value, and in some cases a suffix. They're used to define meta fields and per device mappings.
 
 #### meta_value
@@ -150,8 +177,10 @@ FGT-Branch1 | ... | port1
 
 This configuration will create a per device object for the dynamic interface "LAN" with the value port1 for device FGT-Branch1.
 
+Multiple interfaces can be provided in a comma seperated list. 
+
 #### daddr_value
-The daddr_ prefix will create a per device mapping to an address object. 
+The daddr_ prefix will create a per device mapping to an IPv4 address object. 
 
 Supports following format 
 
@@ -168,6 +197,23 @@ Device_Name | ... | daddr_Local_LAN | daddr_BranchPhones
 FGT-Branch1 | ... | 192.168.1.0/24 | 192.168.1.50 - 192.168.1.65
 
 This configuration will create a per device object for the dynamic address "Local_LAN" with the type subnet and value of 192.168.1.0/24 and "BranchPhones" with the type range and value of 192.168.1.50 - 192.168.1.65 for device FGT-Branch1
+
+#### daddr6_value
+The daddr6_ prefix will create a per device mapping to an IPv6 address object. 
+
+Supports following format 
+
+Subnet: 2000::/24
+
+Range: 2000::1 - 2000::4
+
+Example Excel Sheet
+
+Device_Name | ... | daddr6_Local_LAN | daddr_6BranchPhones
+----------- | --- | ------------- | --
+FGT-Branch1 | ... | 2000::/24 | 2000::1 - 2000::4
+
+This configuration will create a per device object for the dynamic address "Local_LAN" with the type subnet and value of 2000::/24 and "BranchPhones" with the type range and value of 2000::1 - 2000::4 for device FGT-Branch1
 
 
 #### sdwanint_value|suffix
@@ -193,8 +239,6 @@ adom | FortiManager ADOM
 path | Path to Excel file
 
 You can also use the save settings option on the Import Devices page to save the current settings to the file.
-
-> The `passwd` field will not be populated if you use this option.
 
 Example
 `{
@@ -230,4 +274,10 @@ The following settings will be exported using this function
 
 ## Import ADOM
 The Import ADOM function will create a new import based on of a json file created by the Export ADOM function. 
+
+## MacOS and Linux Support
+Builds are no longer provided for MacOS due to issues with PyInstaller and permissions in MacOS. 
+
+To run on MacOS and Linux please run directly in python form source. 
+
 

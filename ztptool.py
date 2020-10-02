@@ -3,6 +3,7 @@ import time
 import eel
 from tkinter import filedialog
 from tkinter import *
+from tkinter import *
 from openpyxl import load_workbook
 import json, requests, ipaddress, sys, platform, io
 
@@ -225,7 +226,6 @@ def get_and_add(std_objects, objecturls):
 
 def openbook(filename):
     headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data, device_vpn_data = "", "", "", "", "", "", ""
-
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
@@ -263,6 +263,7 @@ def openbook(filename):
             device_sdwanint_data = {}
             device_daddr_data = {}
             device_vpn_data = {}
+            device_daddr6_data = {}
             blankrow = 0
             row = 1
 
@@ -283,10 +284,14 @@ def openbook(filename):
                                 newdict[i] = str(ws.cell(row=row, column=col).value)
                             if i == "Device_Name":
                                 device_meta_data[newdict['Device_Name']] = {}
+                                device_meta_data[newdict['Device_Name']]['Device_Name'] = newdict['Device_Name']
                                 device_dint_data[newdict['Device_Name']] = {}
                                 device_sdwanint_data[newdict['Device_Name']] = {}
                                 device_daddr_data[newdict['Device_Name']] = {}
                                 device_vpn_data[newdict['Device_Name']] = {}
+                                device_daddr6_data[newdict['Device_Name']] = {}
+                            if i == "Device_SN":
+                                device_meta_data[newdict['Device_Name']]['Device_SN'] = newdict['Device_SN']
                             if i[0:5] == "meta_":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_meta_data[newdict['Device_Name']][i[5:]] = ""
@@ -306,11 +311,17 @@ def openbook(filename):
                                 if ws.cell(row=row, column=col).value is not None:
                                     device_sdwanint_data[newdict['Device_Name']][sdwanintsettings[0]][
                                         sdwanintsettings[1]] = str(ws.cell(row=row, column=col).value)
+
                             if i[0:6] == "daddr_":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = ""
                                 else:
                                     device_daddr_data[newdict['Device_Name']][i[6:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:7] == "daddr6_":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_daddr6_data[newdict['Device_Name']][i[7:]] = ""
+                                else:
+                                    device_daddr6_data[newdict['Device_Name']][i[7:]] = str(ws.cell(row=row, column=col).value)
                             if i[0:6] == "vpn_OL":
                                 if ws.cell(row=row, column=col).value is None:
                                     device_vpn_data[newdict['Device_Name']][i[4:]] = ""
@@ -557,6 +568,51 @@ def update_device(adom, devicename):
     res = session.post(fmgurl, json=jsondata, verify=False)
 
 
+def add_device_coords(devicename, adom, long, lat):
+    requestid = 1
+    jsondata = {
+        "method": "update",
+        "params": [
+            {
+                "url": "/dvmdb/adom/" + adom + "/device/" + devicename,
+                "data": {
+                    "longitude": long,
+                    "latitude": lat
+                }
+
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+    json_devcoords = json.loads(res.text)
+    status_devcoords = json_devcoords['result'][0]['status']['message']
+    return status_devcoords
+
+def change_admpass(devicename, adom, newpass):
+    requestid = 1
+    jsondata = {
+        "method": "update",
+        "params": [
+            {
+                "url": "/dvmdb/adom/" + adom + "/device/" + devicename,
+                "data": {
+                    "adm_pass": newpass
+                }
+
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+    json_admpw = json.loads(res.text)
+    status_admpw = json_admpw['result'][0]['status']['message']
+    return status_admpw
+
 def assign_cli_template(adom, template, devicename):
     ## template or template group
     template_string = "template"
@@ -761,6 +817,8 @@ def add_device_to_group(device, adomname, vdomname, groupname):
     json_devgroup = json.loads(res.text)
     status_devgroup = json_devgroup['result'][0]['status']['message']
     return status_devgroup
+
+
 
 def install_pkg(pkg, adomname, devicename, vdom):
     requestid = 1
@@ -1018,6 +1076,89 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
                 "params": [
                     {
                         "url": "pm/config/adom/" + adomname + "/obj/firewall/address/" + daddrobj + "/dynamic_mapping",
+                        "data": addrsettings
+                    }
+                ],
+                "id": requestid,
+                "session": fmg_sessionid
+            }
+            res = session.post(fmgurl, json=jsondata, verify=False)
+            print(res.text)
+            json_result = json.loads(res.text)
+            result_msg = json_result['result'][0]['status']['message']
+    else:
+        result_msg = current_int_result['result'][0]['status']['message']
+    return result_msg
+
+
+def add_daddr6(adomname, daddrobj, newaddr, devicename, vdom):
+    requestid = 1
+    jsondata = {
+        "method": "get",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adomname + "/obj/firewall/address6/" + daddrobj
+            }
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print(res.text)
+
+    current_int_result = json.loads(res.text)
+    if current_int_result['result'][0]['status']['message'] == "OK":
+        current_int = current_int_result['result'][0]['data']
+
+
+        result_msg = "unknown error"
+
+        submit = False
+
+        if current_int['type'] == 0:
+            try:
+                addrsettings = [
+                    {
+                        "_scope": [
+                            {
+                                "name": devicename,
+                                "vdom": vdom
+                            }
+                        ],
+                        "ip6": newaddr
+                    }
+                ]
+                submit = True
+            except:
+                result_msg = "WARNING: Could not decode ip address into network_address/netmask"
+        elif current_int['type'] == 1:
+            try:
+                newaddr.strip(" ")
+                splitaddr = newaddr.split("-")
+
+                addrsettings = [
+                    {
+                        "_scope": [
+                            {
+                                "name": devicename,
+                                "vdom": vdom
+                            }
+                        ],
+                        "end-ip": splitaddr[1].strip(),
+                        "start-ip": splitaddr[0].strip()
+                    }
+                ]
+                submit = True
+            except:
+                result_msg = "WARNING: Could not calculate IP RANGE"
+
+        if submit is True:
+            requestid = 1
+            jsondata = {
+                "method": "add",
+                "params": [
+                    {
+                        "url": "pm/config/adom/" + adomname + "/obj/firewall/address6/" + daddrobj + "/dynamic_mapping",
                         "data": addrsettings
                     }
                 ],
@@ -1351,13 +1492,25 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
     ### Check for Meta Fields and Create if they dont exist
     if proceed == True:
+
         metafields = get_meta()
         for field in headings:
             if field[0:5] == "meta_":
                 try:
                     IPDICT = next(item for item in metafields if item["name"] == field[5:])
                 except:
-                    result = create_meta(field[5:])
+                    create_meta(field[5:])
+
+        ## check for automatic Meta field for Device_Name and Device_SN
+        try:
+            IPDICT = next(item for item in metafields if item["name"] == "Device_Name")
+        except:
+            create_meta("Device_Name")
+        try:
+            IPDICT = next(item for item in metafields if item["name"] == "Device_SN")
+        except:
+            create_meta("Device_SN")
+
 
     ### Create Model Devices
     if proceed == True:
@@ -1392,9 +1545,34 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         else:
                             return_html += "Assign Device Group \"" + devicedata[
                                 'Device_Group'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
-                
+
+                ## Add coordinates to device
+                if "Device_Longitute" in devicedata and "Device_Latitute" in devicedata:
+                    if devicedata['Device_Longitute'] == "" or devicedata['Device_Longitute'] is None or devicedata['Device_Latitute'] == "" or devicedata['Device_Latitute'] is None:
+                        return_html += "Assign Device Coordinates {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_addcoords = add_device_coords(devicedata['Device_Name'], fmg_adom, devicedata['Device_Longitute'], devicedata['Device_Latitute'])
+
+                        if status_addcoords == "OK":
+                            return_html += "Assign Device Coordinates successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Assign Device Coordinates failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
+                ## Change device password for admin user if Device_Adminpassword exists in excel sheet
+                if "Device_Adminpassword" in devicedata:
+                    if devicedata['Device_Adminpassword'] == "" or devicedata['Device_Adminpassword'] is None:
+                        return_html += "Change Device Admin Password {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_changeadmpass = change_admpass(devicedata['Device_Name'], fmg_adom, devicedata['Device_Adminpassword'])
+
+                        if status_changeadmpass == "OK":
+                            return_html += "Change Device Admin Password successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Change Device Admin Password failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
+
+
                 ## Add meta data to device
-                print("## Add meta data to device")
                 update_device(fmg_adom, devicedata['Device_Name'])
 
 
@@ -1458,7 +1636,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += status_mapdint + "<br>\n"
 
                 ### MAP DYNAMIC ADDRESS OJBECTS
-
+                ## ipv4
                 for key in device_daddr_data[devicedata['Device_Name']]:
                     if device_daddr_data[devicedata['Device_Name']][key] == "":
                         return_html += "Add dynamic map for address \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
@@ -1493,6 +1671,19 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                         else:
                             return_html += "Add vpnnode map for device \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                             return_html += status_mapdaddr + "<br>\n"
+
+                ## ipv6
+                for key in device_daddr6_data[devicedata['Device_Name']]:
+                    if device_daddr6_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add dynamic map for address6 \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_mapdaddr6 = add_daddr6(fmg_adom, key, device_daddr6_data[devicedata['Device_Name']][key],
+                                                    devicedata['Device_Name'], 'root')
+                        if status_mapdaddr6 == "OK":
+                            return_html += "Add dynamic map for address6 \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add dynamic map for address6 \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdaddr6 + "<br>\n"
 
                 ### MAP SDWAN Interfaces
                 for key in device_sdwanint_data[devicedata['Device_Name']]:
@@ -1813,15 +2004,15 @@ def btn_getjsonfile():
 
 
 @eel.expose
-def savesettings(save_fmg,save_user,save_adom,save_path):
+def savesettings(save_fmg,save_user,save_adom,save_path,save_pw):
     settingsfiledata = '''{
   "fmg": "%s",
   "user": "%s",
-  "passwd": "",
+  "passwd": "%s",
   "adom": "%s",
   "path": "%s"
 }
-''' % (save_fmg, save_user, save_adom, save_path)
+''' % (save_fmg, save_user, save_pw, save_adom, save_path)
 
     try:
         setting_file = open("settings.json", "wt")
@@ -2050,7 +2241,8 @@ def getsettings_devices():
         </div>
         <div form-group>
           <button type="button" onclick="getFolder()" class="btn btn-secondary btn-sm">Select File</button>
-          Excel Path: <span id="filepath">%s</span> <div class="float-right"><button type="button" onclick="savesettings()" class="btn btn-info btn-sm">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
+          Excel Path: <span id="filepath">%s</span> <div class="float-right">
+          <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#savesettingsModal">Save Settings <span class="glyphicon glyphicon-floppy-save"></span></button></div><br/><br/>
         </div>
         <div class="form-group">
           <button type="button" onclick="processxlsx(document.getElementById('filepath').innerHTML)" class="btn btn-primary">Submit</button>
