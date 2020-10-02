@@ -223,7 +223,7 @@ def get_and_add(std_objects, objecturls):
 ### Start copy from draft
 
 def openbook(filename):
-    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data = "", "", "", "", "", ""
+    headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data, device_vpn_data = "", "", "", "", "", "", ""
     try:
         with open(filename, "rb") as f:
             in_mem_file = io.BytesIO(f.read())
@@ -330,7 +330,7 @@ def openbook(filename):
         print(e)
 
     wb = None
-    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data
+    return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data, device_vpn_data
 
 
 
@@ -1174,6 +1174,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     global device_meta_data
     global device_dint_data
     global device_sdwanint_data
+    global device_vpn_data
     global alldevices
 
     qi_status = False
@@ -1186,7 +1187,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     return_html = ""
     sendupdate(return_html)
 
-    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data = openbook(
+    alldevices, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data, device_vpn_data = openbook(
         filename)
 
     if alldevices == "workbook":
