@@ -1,3 +1,5 @@
+import time
+
 import eel
 from tkinter import filedialog
 from tkinter import *
@@ -126,7 +128,7 @@ def export_adom(adomname):
                                        "pm/config/adom/" + adomname + "/pkg/" + polpkg + "/firewall/policy",
                                        ["obj seq", "_policy_block"]]}, "polpkg_policy")
 
-    print(json.dumps(export_info, indent=4, sort_keys=True))
+    # print(json.dumps(export_info, indent=4, sort_keys=True))
     return json.dumps(export_info, indent=4, sort_keys=True)
 
 
@@ -260,6 +262,7 @@ def openbook(filename):
             device_dint_data = {}
             device_sdwanint_data = {}
             device_daddr_data = {}
+            device_vpn_data = {}
             device_daddr6_data = {}
             blankrow = 0
             row = 1
@@ -285,6 +288,7 @@ def openbook(filename):
                                 device_dint_data[newdict['Device_Name']] = {}
                                 device_sdwanint_data[newdict['Device_Name']] = {}
                                 device_daddr_data[newdict['Device_Name']] = {}
+                                device_vpn_data[newdict['Device_Name']] = {}
                                 device_daddr6_data[newdict['Device_Name']] = {}
                             if i == "Device_SN":
                                 device_meta_data[newdict['Device_Name']]['Device_SN'] = newdict['Device_SN']
@@ -318,6 +322,12 @@ def openbook(filename):
                                     device_daddr6_data[newdict['Device_Name']][i[7:]] = ""
                                 else:
                                     device_daddr6_data[newdict['Device_Name']][i[7:]] = str(ws.cell(row=row, column=col).value)
+                            if i[0:6] == "vpn_OL":
+                                if ws.cell(row=row, column=col).value is None:
+                                    device_vpn_data[newdict['Device_Name']][i[4:]] = ""
+                                else:
+                                    device_vpn_data[newdict['Device_Name']][i[4:]] = str(
+                                        ws.cell(row=row, column=col).value)
 
                             col += 1
 
@@ -331,33 +341,38 @@ def openbook(filename):
 
     wb = None
     return AllDevicesList, headings, device_meta_data, device_dint_data, device_sdwanint_data, device_daddr_data, device_daddr6_data, device_vpn_data
-
+ 
 
 
 def get_workspace():
-    requestid = 1
-    jsondata = {
-        "method": "get",
-        "params": [
-            {
-                "url": "/cli/global/system/global"
-            }
-        ],
-        "id": requestid,
-        "session": fmg_sessionid
-    }
 
-    print("Request:")
-    print(json.dumps(jsondata, indent=4, sort_keys=True))
-    res = session.post(fmgurl, json=jsondata, verify=False)
-    response = json.loads(res.text)
-    print("Response:")
-    print(json.dumps(response, indent=4, sort_keys=True))
+    if fmgurl.find("fortimanager.forticloud.com") != -1:
+        print("### This is FortiManager Cloud - Workspacemode not supported")
+        workspacemode = 0
+    else:
+        requestid = 1
+        jsondata = {
+            "method": "get",
+            "params": [
+                {
+                    "url": "/cli/global/system/global"
+                }
+            ],
+            "id": requestid,
+            "session": fmg_sessionid
+        }
 
-    try:
-        workspacemode = response['result'][0]['data']['workspace-mode']
-    except:
-        workspacemode = 3
+        #print("Request:")
+        #print(json.dumps(jsondata, indent=4, sort_keys=True))
+        res = session.post(fmgurl, json=jsondata, verify=False)
+        response = json.loads(res.text)
+        #print("Response:")
+        #print(json.dumps(response, indent=4, sort_keys=True))
+
+        try:
+            workspacemode = response['result'][0]['data']['workspace-mode']
+        except:
+            workspacemode = 3
     return workspacemode
 
 
@@ -525,7 +540,7 @@ def add_model_device(adomname, devicename, sn, platform, prefer_img):
                         "flags": 67371040,
                         "sn": sn,
                         "os_ver": 6,
-                        "mr": 2
+                        "mr": 4
                     }
                 }
             }
@@ -598,7 +613,7 @@ def change_admpass(devicename, adom, newpass):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    print("Change admin password: " + res.text)
     json_admpw = json.loads(res.text)
     status_admpw = json_admpw['result'][0]['status']['message']
     return status_admpw
@@ -642,12 +657,12 @@ def assign_cli_template(adom, template, devicename):
         "id": requestid,
         "session": fmg_sessionid
     }
-    print("Request:")
-    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    #print("Request:")
+    #print(json.dumps(jsondata, indent=4, sort_keys=True))
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_assignclitemplate = json.loads(res.text)
-    print("Response:")
-    print(json.dumps(json_assignclitemplate, indent=4, sort_keys=True))
+    #print("Response:")
+    #print(json.dumps(json_assignclitemplate, indent=4, sort_keys=True))
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
 
@@ -779,7 +794,7 @@ def add_install_target(device, adomname, vdomname, pkg):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    #print(res.text)
     json_assignppkg = json.loads(res.text)
     status_ppkg = json_assignppkg['result'][0]['status']['message']
     return status_ppkg
@@ -803,7 +818,7 @@ def add_device_to_group(device, adomname, vdomname, groupname):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    #print(res.text)
     json_devgroup = json.loads(res.text)
     status_devgroup = json_devgroup['result'][0]['status']['message']
     return status_devgroup
@@ -896,12 +911,12 @@ def add_policy_interface_member(adomname, newinterfacename, realinterface, devic
         "id": requestid,
         "session": fmg_sessionid
     }
-    print("Request:")
-    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    #print("Request:")
+    #print(json.dumps(jsondata, indent=4, sort_keys=True))
     res = session.post(fmgurl, json=jsondata, verify=False)
     json_mapdint = json.loads(res.text)
-    print("Response:")
-    print(json.dumps(json_mapdint, indent=4, sort_keys=True))
+    #print("Response:")
+    #print(json.dumps(json_mapdint, indent=4, sort_keys=True))
     status_mapdint = json_mapdint['result'][0]['status']['message']
     return status_mapdint
 
@@ -987,7 +1002,7 @@ def assign_sdwan_template(adom, sdwantemplate, devicename, vdom):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    #print(res.text)
     json_assignclitemplate = json.loads(res.text)
     status_assignclitemplate = json_assignclitemplate['result'][0]['status']['message']
     return status_assignclitemplate
@@ -1006,7 +1021,7 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    #print(res.text)
 
     current_int_result = json.loads(res.text)
     if current_int_result['result'][0]['status']['message'] == "OK":
@@ -1073,7 +1088,7 @@ def add_daddr(adomname, daddrobj, newaddr, devicename, vdom):
                 "session": fmg_sessionid
             }
             res = session.post(fmgurl, json=jsondata, verify=False)
-            print(res.text)
+            #print(res.text)
             json_result = json.loads(res.text)
             result_msg = json_result['result'][0]['status']['message']
     else:
@@ -1094,7 +1109,7 @@ def add_daddr6(adomname, daddrobj, newaddr, devicename, vdom):
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
-    print(res.text)
+    #print(res.text)
 
     current_int_result = json.loads(res.text)
     if current_int_result['result'][0]['status']['message'] == "OK":
@@ -1156,12 +1171,225 @@ def add_daddr6(adomname, daddrobj, newaddr, devicename, vdom):
                 "session": fmg_sessionid
             }
             res = session.post(fmgurl, json=jsondata, verify=False)
-            print(res.text)
+            #print(res.text)
             json_result = json.loads(res.text)
             result_msg = json_result['result'][0]['status']['message']
     else:
         result_msg = current_int_result['result'][0]['status']['message']
     return result_msg
+
+
+def add_vpn_overlay(adom, overlayname , authpasswd):
+    # Adds a VPN Community to FortiManager
+    # @darryl
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/vpntable",
+                "data": [
+                    {
+                        "name": overlayname,
+                        "description": "Overlay Created by ZTP Tool",
+                        "topology": 2,
+                        "psk-auto-generate": "enable",
+                        "ike1keylifesec": 28800,
+                        "ike1dpd": 1,
+                        "ike1natkeepalive": 10,
+                        "ike2keylifesec": 1800,
+                        "ike2keylifekbs": 5120,
+                        "ike2keepalive": 1,
+                        "intf-mode": 0,
+                        "fcc-enforcement": 0,
+                        "ike-version": 1,
+                        "negotiate-timeout": 30,
+                        "inter-vdom": 0,
+                        "auto-zone-policy": 0,
+                        "npu-offload": 1,
+                        "authmethod": 1,
+                        "ike1dhgroup": 12,
+                        "dpd": 3,
+                        "localid-type": 0,
+                        "ike1mode": 1,
+                        "ike1nattraversal": 1,
+                        "ike1proposal": [
+                            "aes128-sha256",
+                            "aes256-sha256"
+                        ],
+                        "ike2autonego": 0,
+                        "ike2dhgroup": 12,
+                        "ike2keylifetype": 1,
+                        "pfs": 1,
+                        "ike2proposal": [
+                            "aes128-sha256",
+                            "aes256-sha256"
+                        ],
+                        "replay": 1
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("### add_vpn_overlay ")
+    json_add_vpn_overlay = json.loads(res.text)
+    status_add_vpn_overlay = json_add_vpn_overlay['result'][0]['status']['message']
+    return status_add_vpn_overlay
+
+
+def add_vpn_hub(adom, overlayname, interface , authpasswd, devicename, vdom, oNetwork):
+    #Adds a hub to an Existing VPN community in FortiManager
+
+    # need to add Check Overlay Exists/Check Community Exists?
+    # @Darryl
+    # Enhancement - Need to update Exiting Overlay\Node ID number, otherwise use a new ID.
+    # Note - this currently uses ID 0 - which means next available ID number - if this imports twice you will get two entries
+
+    oTemp = ipaddress.ip_network(oNetwork,strict=False)
+
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/node",
+                "data": [
+                    {
+                        "id": 0,
+                        "protected_subnet": {
+                            "addr": "all",
+                            "seq": 1
+                        },
+                        "scope member": {
+                            "name": devicename,
+                            "vdom": "root"
+                        },
+                        "vpntable": overlayname,
+                        "role": 0,
+                        "iface": interface,
+                        "hub_iface": [],
+                        "peer": [],
+                        "automatic_routing": 0,
+                        "mode-cfg": 1,
+                        "mode-cfg-ip-version": 0,
+                        "ipv4-start-ip": str(oTemp[10]),
+                        "ipv4-end-ip": str(oTemp[-1]),
+                        "ipv4-netmask": str(oTemp.netmask),
+                        "net-device": 0,
+                        "tunnel-search": 1,
+                        "extgwip": [],
+                        "extgw_hubip": [],
+                        "extgw_p2_per_net": 0,
+                        "route-overlap": 0,
+                        "vpn-zone": [],
+                        "spoke-zone": [],
+                        "vpn-interface-priority": 0,
+                        "auto-configuration": 1,
+                        "dns-service": 5,
+                        #"dhcp-server": 1,
+                        "ipsec-lease-hold": 60,
+                        "add-route": 0,
+                        "assign-ip": 1,
+                        "assign-ip-from": 0,
+                        "authusrgrp": [],
+                        "dns-mode": 1,
+                        "exchange-interface-ip": 0,
+                        #"exchange-interface-ip": 0,
+                        "peergrp": [],
+                        "peertype": 1,
+                        "unity-support": 1,
+                        "xauthtype": 1
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("### add_vpn_hub ")
+    json_addvpnhub = json.loads(res.text)
+    #print(json.dumps(jsondata, indent=4, sort_keys=True))
+    status_addvpnhub = json_addvpnhub['result'][0]['status']['message']
+    return status_addvpnhub
+
+
+def add_vpn_branch(adom, overlayname, interface , authpasswd, devicename, vdom):
+    #Adds a node to an Existing VPN community in FortiManager
+
+    # need to add Check Overlay Exists/Check Community Exists?
+    # @Darryl
+    # Enhancement - Need to update Exiting Overlay\Node ID number, otherwise use a new ID.
+    # Note - this currently uses ID 0 - which means next available ID number - if this imports twice you will get two entries
+
+    requestid = 1
+    jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/config/adom/" + adom + "/obj/vpnmgr/node",
+                "data": [
+                    {
+                        "protected_subnet": {
+                            "addr": "all",
+                            "seq": 1
+                        },
+                        "scope member": {
+                            "name": devicename,
+                            "vdom": "root"
+                        },
+                        "vpntable": overlayname,
+                        "role": 1,
+                        "usrgrp": [],
+                        "iface": interface,
+                        "automatic_routing": 0,
+                        "extgwip": [],
+                        "extgw_hubip": [],
+                        "extgw_p2_per_net": 0,
+                        "route-overlap": 0,
+                        "vpn-zone": [],
+                        "spoke-zone": [],
+                        "vpn-interface-priority": 0,
+                        "auto-configuration": 1,
+                        "ipsec-lease-hold": 60,
+                        "add-route": 0,
+                        "assign-ip": 0,
+                        "assign-ip-from": 0,
+                        "exchange-interface-ip": 1,
+                        "mode-cfg": 1,
+                        "mode-cfg-ip-version": 0,
+                        "net-device": 1,
+                        "peergrp": [],
+                        "peertype": 8,
+                        "tunnel-search": 0,
+                        "unity-support": 1,
+                        "xauthtype": 1
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    print("### add_vpn_branch")
+    json_addvpnnode = json.loads(res.text)
+    #print(json.dumps(jsondata, indent=4, sort_keys=True))
+    status_addvpnnode = json_addvpnnode['result'][0]['status']['message']
+    return status_addvpnnode
+
+
+##====================================================================================
+##====================================================================================
+##====================================================================================
+##====================================================================================
+##====================================================================================
 
 
 @eel.expose
@@ -1226,13 +1454,15 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
     sendupdate(return_html)
     ### validity checks
     if proceed == True:
+        print("### validity checks")
         ## Does ADOM exist in FMG
 
         jsondata = {"method": "get", "params": [{"url": "dvmdb/adom/" + fmg_adom}], "id": requestid,
                     "session": fmg_sessionid}
         res = session.post(fmgurl, json=jsondata, verify=False)
         json_result = json.loads(res.text)
-        print(json_result['result'][0]['status']['message'])
+        print("-- ## Does ADOM exist in FMG v1 -- ")
+        #print(json_result['result'][0]['status']['message'])
         if json_result['result'][0]['status']['message'] != "OK":
             return_html += "FortiManager ADOM does not exist <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             proceed = False
@@ -1272,6 +1502,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
     ### Check for Meta Fields and Create if they dont exist
     if proceed == True:
+        print("### Create/Check for Meta Fields")
 
         metafields = get_meta()
         for field in headings:
@@ -1294,9 +1525,11 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
     ### Create Model Devices
     if proceed == True:
+        print("### Create Model Devices")
         sendupdate(return_html)
 
         for devicedata in alldevices:
+            print("   ### Create Model Device " + devicedata['Device_Name'])
             return_html += "<br>\n <b> >> Adding Device [ " + devicedata['Device_Name'] + " ] </b><br>\n"
             add_dev_status = track_model_task(
                 add_model_device(fmg_adom, devicedata['Device_Name'], devicedata['Device_SN'],
@@ -1313,6 +1546,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
             if add_dev_status == True:
                 ## Add device to device group
+                print("   ### Add device to device group")
                 if "Device_Group" in devicedata:
                     if devicedata['Device_Group'] == "" or devicedata['Device_Group'] is None:
                         return_html += "Assign Device Group {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
@@ -1326,7 +1560,8 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += "Assign Device Group \"" + devicedata[
                                 'Device_Group'] + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
-                ## Add coordinates to device
+                ### Add coordinates to device
+                print("   ### Add coordinates to device")
                 if "Device_Longitute" in devicedata and "Device_Latitute" in devicedata:
                     if devicedata['Device_Longitute'] == "" or devicedata['Device_Longitute'] is None or devicedata['Device_Latitute'] == "" or devicedata['Device_Latitute'] is None:
                         return_html += "Assign Device Coordinates {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
@@ -1339,6 +1574,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += "Assign Device Coordinates failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
 
                 ## Change device password for admin user if Device_Adminpassword exists in excel sheet
+                print("   ### Change device password")
                 if "Device_Adminpassword" in devicedata:
                     if devicedata['Device_Adminpassword'] == "" or devicedata['Device_Adminpassword'] is None:
                         return_html += "Change Device Admin Password {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
@@ -1352,11 +1588,13 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
 
 
-                ## Add meta data to device
+                ### Add meta data to device
+                print("   ### Add meta data to device")
                 update_device(fmg_adom, devicedata['Device_Name'])
 
 
-                ## Assign Initial CLI Template
+                ### Assign Initial CLI Template
+                print("   ### Assign Initial CLI Template")
                 status_clitemp = ""
                 qi_status = False
                 if devicedata['CLI_Template'] == "" or devicedata['CLI_Template'] is None:
@@ -1427,6 +1665,30 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += "Add dynamic map for address \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                         else:
                             return_html += "Add dynamic map for address \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+                            return_html += status_mapdaddr + "<br>\n"
+
+                ### Add Branch to Central VPN Manager (Darryl)
+
+                for key in device_vpn_data[devicedata['Device_Name']]:   ## e.g. key = vpn_OL_INET, vpn_OL_MPLS, ishub
+                    if device_vpn_data[devicedata['Device_Name']][key] == "":
+                        return_html += "Add vpn node for device \"" + key + "\" {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        # key = the overlay name
+                        add_vpn_overlay(fmg_adom, key, "")
+
+                        print("     Is this device a vpn hub: " + devicedata['vpn_IsHub'] + " / Overlayname: " + key)
+                        if devicedata['vpn_IsHub'] in ["true","yes","hub","1"]:
+                            print('    vpn_Subnet_' + key + "=" + devicedata['vpn_Subnet_' + key])
+                            status_mapvpnnode = add_vpn_hub(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
+                                                         "", devicedata['Device_Name'], fmg_adom, devicedata['vpn_Subnet_'+key])
+                        else:
+                            status_mapvpnnode = add_vpn_branch(fmg_adom, key, device_vpn_data[devicedata['Device_Name']][key],
+                                                         "", devicedata['Device_Name'], fmg_adom)
+
+                        if status_mapvpnnode == "OK":
+                            return_html += "Add vpnnode map for device \"" + key + "\" successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Add vpnnode map for device \"" + key + "\" failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
                             return_html += status_mapdaddr + "<br>\n"
 
                 ## ipv6
@@ -1518,6 +1780,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
 
     ### LOGOUT OF FMG
     if fmg_sessionid is not None:
+        print("### LOGOUT OF FMG")
         requestid = 1
         jsondata = {'method': 'exec', 'params': [{'url': '/sys/logout'}], 'session': fmg_sessionid, 'id': requestid}
         res = session.post(fmgurl, json=jsondata, verify=False)
@@ -1691,6 +1954,7 @@ def btn_checkexportadom(fmghost, fmguser, fmgpasswd, fmgadom):
                     "session": fmg_sessionid}
         res = session.post(fmgurl, json=jsondata, verify=False)
         json_result = json.loads(res.text)
+        print("-- ## Does ADOM exist in FMG v2 -- ")
         print(json_result['result'][0]['status']['message'])
         if json_result['result'][0]['status']['message'] != "OK":
             return_html += "FortiManager ADOM does not exist <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br><br/>\n"
