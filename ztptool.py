@@ -418,6 +418,28 @@ def unlock_adom(adom):
 
 def workspace_commit(adom):
     jsondata = {
+        "method": "set",
+        "params": [
+            {
+                "url": "pm/devprof/adom/" + adom + "/default",
+                "data": {
+                    "description": str(time.time())
+                }
+            }
+        ],
+        "id": 1,
+        "session": fmg_sessionid
+    }
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
+
+
+
+    jsondata = {
         "method": "exec",
         "params": [
             {
@@ -1172,6 +1194,38 @@ def add_daddr6(adomname, daddrobj, newaddr, devicename, vdom):
     return result_msg
 
 
+def add_cert_template(device, adom, cert):
+    requestid = 1
+    jsondata = {
+        "method": "exec",
+        "params": [
+            {
+                "url": "/securityconsole/sign/certificate/template",
+                "data": [
+                    {
+                        "adom": adom,
+                        "scope": [
+                            {
+                                "name": device,
+                                "vdom": ""
+                            }
+                        ],
+                        "template": "adom/" + adom + "/obj/certificate/template/" + cert
+                    }
+                ]
+            }
+
+        ],
+        "id": requestid,
+        "session": fmg_sessionid
+    }
+    res = session.post(fmgurl, json=jsondata, verify=False)
+    # print(res.text)
+    json_assigncerttemplate = json.loads(res.text)
+    status_assigncerttemplate = json_assigncerttemplate['result'][0]['status']['message']
+    return status_assigncerttemplate
+
+
 def add_vpn_overlay(adom, overlayname, authpasswd):
     # Adds a VPN Community to FortiManager
     # @darryl
@@ -1474,7 +1528,7 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
             return_html += "FortiManager is in workflow mode (not supported) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
             proceed = False
         elif workspacemode == 1:
-            return_html += "FortiManager is in workspace mode (not supported on FMG < 6.2.3 as per FMG Bug 0541911) <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+            return_html += "FortiManager is in workspace mode <span class=\"glyphicon glyphicon-info-sign\" style=\"color:blue\"></span><br>\n"
             # proceed = False
         elif workspacemode == 0:
             return_html += "FortiManager has workspace mode disabled <span class=\"glyphicon glyphicon-info-sign\" style=\"color:blue\"></span><br>\n"
@@ -1586,6 +1640,22 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                             return_html += "Change Device Admin Password successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
                         else:
                             return_html += "Change Device Admin Password failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
+
+                ### Add certificate template to device
+                print("   ### Add certificate template to device")
+                if "Cert_Template" in devicedata:
+                    if devicedata['Cert_Template'] == "" or devicedata['Cert_Template'] is None:
+                        return_html += "Assign Certificate Template {not defined} <span class=\"glyphicon glyphicon-info-sign\" style=\"color:orange\"></span><br>\n"
+                    else:
+                        status_certtemplate = add_cert_template(devicedata['Device_Name'], fmg_adom,
+                                                             devicedata['Cert_Template'])
+
+                        if status_certtemplate == "OK":
+                            return_html += "Assign Certificate Template successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
+                        else:
+                            return_html += "Assign Certificate Template failed <span class=\"glyphicon glyphicon-remove\" style=\"color:red\"></span><br>\n"
+
 
                 ### Add meta data to device
                 print("   ### Add meta data to device")
