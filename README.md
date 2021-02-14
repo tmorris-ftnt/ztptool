@@ -27,6 +27,7 @@ Downloads are available on the [releases](https://github.com/tmorris-ftnt/ztptoo
       - [Device_Group](#device_group)
       - [Device_Longitute](#device_longitute)
       - [Device_Latitute](#device_latitute)
+      - [Cert_Template](#cert_template)      
     + [Dynamic Fields](#dynamic-fields)
       - [meta_value](#meta_value)
       - [dint_value](#dint_value)
@@ -146,6 +147,9 @@ This will set the longitute value for the device which is used to show the devic
 
 #### Device_Latitute
 This will set the latitute value for the device which is used to show the device on a map.  
+
+#### Cert_Template
+Execute an existing certificate template against the device.
 
 ### Dynamic Fields
 The following fields have are optional and have a prefix, a value, and in some cases a suffix. They're used to define meta fields and per device mappings.
