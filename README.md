@@ -136,6 +136,18 @@ This will assign the Policy Package to the Device.
 
 ### Optional Device Fields
 
+#### HA_SN
+this will be the serial number of the secondary unit in the HA cluster - if this is present it will try to build the HA device (this is a bit of a mistake as you wont be able to mix HA and non HA devices in the same xlsx currently, i'll fix it in the next release so that it needs to have a SN in there for it to trigger).
+
+#### HA_Password
+password for the ha cluster
+
+#### HA_ClusterName
+name of the HA cluster
+
+#### HA_GroupID
+id of the HA cluster
+
 #### Device_Adminpassword
 This will set the password for the admin user on the device, this field needs to match what is on the FortiGate device when it first connects to FortiManager. Default is "" (no password)
 
