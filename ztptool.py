@@ -572,7 +572,10 @@ def add_model_device(adomname, devicename, sn, platform, prefer_img, fmg_adom_os
     last_task = str(response['result'][0]['data']['taskid'])
     return last_task
 
-def add_ha_model_device(adomname, devicename, sn, platform, prefer_img, fmg_adom_osver, fmg_adom_mr, ha_sn, ha_password, ha_clustername, ha_groupid):
+def add_ha_model_device(adomname, devicename, sn, platform, prefer_img, fmg_adom_osver, fmg_adom_mr, ha_sn, ha_password, ha_clustername, ha_groupid, ha_monitor, ha_hbdev):
+    ha_monitor_list = ha_monitor.split(' ')
+    ha_hbdev_list = ha_hbdev.split(' ')
+    ha_hbdev_list[1] = int(ha_hbdev_list[1])
     requestid = 1
     jsondata = {
         "method": "exec",
@@ -621,7 +624,7 @@ def add_ha_model_device(adomname, devicename, sn, platform, prefer_img, fmg_adom
                                         "url": "/pm/config/device/%s/global/system/ha",
                                         "data": {
                                             "password": ha_password,
-                                            "hbdev": [],
+                                            "hbdev": ha_hbdev_list,
                                             "monitor": []
                                         }
                                     }
@@ -638,7 +641,11 @@ def add_ha_model_device(adomname, devicename, sn, platform, prefer_img, fmg_adom
         "session": fmg_sessionid
     }
     res = session.post(fmgurl, json=jsondata, verify=False)
+    print("Request:")
+    print(json.dumps(jsondata, indent=4, sort_keys=True))
     response = json.loads(res.text)
+    print("Response:")
+    print(json.dumps(response, indent=4, sort_keys=True))
     last_task = str(response['result'][0]['data']['taskid'])
     return last_task
 
@@ -1664,13 +1671,18 @@ def btn_checkxlsx(filename, fmghost, fmguser, fmgpasswd, fmgadom):
                 update_device(fmg_adom, devicedata['Device_Name'])
                 return_html += "Update meta data for (" + devicedata['Device_Name'] +") successful <span class=\"glyphicon glyphicon-ok\" style=\"color:green\"></span><br>\n"
             else:
-                if "HA_SN" in devicedata:
+
+                if "HA_SN" not in devicedata:
+                    devicedata['HA_SN'] = ""
+                if "HA_Monitor" not in devicedata:
+                    devicedata['HA_Monitor'] = ""
+                if devicedata["HA_SN"] != "":
                     print("   ### Create HA Model Device " + devicedata['Device_Name'])
                     return_html += "<br>\n <b> >> Adding HA Device [ " + devicedata['Device_Name'] + " ] </b><br>\n"
                     add_dev_status = track_model_task(
                         add_ha_model_device(fmg_adom, devicedata['Device_Name'], devicedata['Device_SN'],
                                          devicedata['Platform'], devicedata['Upgrade_Ver'], fmg_adom_osver,
-                                         fmg_adom_mr, devicedata['HA_SN'], devicedata["HA_Password"], devicedata['HA_ClusterName'], devicedata['HA_GroupID']))
+                                         fmg_adom_mr, devicedata['HA_SN'], devicedata["HA_Password"], devicedata['HA_ClusterName'], int(devicedata['HA_GroupID']),  devicedata['HA_Monitor'], devicedata['HA_Hbdev']))
 
                     sendupdate(return_html)
                 else:
